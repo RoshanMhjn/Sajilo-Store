@@ -17,6 +17,8 @@ export const salesTable = pgTable("sales", {
   status: text("status").notNull().default("completed"),
   notes: text("notes"),
   cashierId: integer("cashier_id"),
+  pointsEarned: integer("points_earned").notNull().default(0),
+  tierDiscountPct: numeric("tier_discount_pct", { precision: 5, scale: 2 }).notNull().default("0"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

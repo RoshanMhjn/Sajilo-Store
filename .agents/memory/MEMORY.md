@@ -1,0 +1,1 @@
+- [Nepalese ERP overhaul](nepal-erp.md) — NPR currency, tiers, RBAC, member numbers, invoice print — full stack done

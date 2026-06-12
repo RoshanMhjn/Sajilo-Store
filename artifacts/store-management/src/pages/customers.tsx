@@ -14,14 +14,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Search, Edit, Trash2, Users, Star } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Users, Star, Crown, Award } from "lucide-react";
 
-const tierColors: Record<string, string> = {
-  bronze: "bg-orange-100 text-orange-800",
-  silver: "bg-gray-200 text-gray-800",
-  gold: "bg-yellow-100 text-yellow-800",
-  platinum: "bg-blue-100 text-blue-800",
+const tierConfig: Record<string, { label: string; discount: number; color: string; icon: any; nextAt?: number; nextLabel?: string }> = {
+  basic:    { label: "Basic",    discount: 0,  color: "bg-gray-100 text-gray-700",     icon: Star,  nextAt: 10000,  nextLabel: "Gold" },
+  gold:     { label: "Gold",     discount: 5,  color: "bg-yellow-100 text-yellow-800", icon: Award, nextAt: 50000,  nextLabel: "Platinum" },
+  platinum: { label: "Platinum", discount: 10, color: "bg-blue-100 text-blue-800",     icon: Crown },
 };
+
+function fmt(amount: number) {
+  return `रू ${amount.toLocaleString("en-NP", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
 
 const schema = z.object({
   name: z.string().min(1, "Name required"),
@@ -75,64 +78,110 @@ export default function Customers() {
   const items = (data as any)?.items ?? [];
   const total = (data as any)?.total ?? 0;
 
+  // Tier summary counts
+  const tierCounts = { basic: 0, gold: 0, platinum: 0 };
+  items.forEach((c: any) => { if (c.membershipTier in tierCounts) (tierCounts as any)[c.membershipTier]++; });
+
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Customers</h1>
-          <p className="text-sm text-muted-foreground">{total} customers</p>
+          <p className="text-sm text-muted-foreground">{total} members</p>
         </div>
         <Button onClick={openCreate} data-testid="button-create-customer"><Plus className="h-4 w-4 mr-2" />Add Customer</Button>
+      </div>
+
+      {/* Tier summary cards */}
+      <div className="grid grid-cols-3 gap-3">
+        {(["basic", "gold", "platinum"] as const).map(tier => {
+          const cfg = tierConfig[tier];
+          const Icon = cfg.icon;
+          return (
+            <Card key={tier} className="border">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className={`h-9 w-9 rounded-full flex items-center justify-center ${cfg.color}`}>
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="text-sm font-semibold">{cfg.label}</div>
+                  <div className="text-xs text-muted-foreground">{cfg.discount}% discount · {tierCounts[tier]} members</div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <Card>
         <CardHeader className="pb-3">
           <div className="relative max-w-xs">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search customers..." className="pl-8" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
+            <Input placeholder="Search by name, phone or member #..." className="pl-8" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Member #</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Phone</TableHead>
-                <TableHead>Membership</TableHead>
-                <TableHead>Loyalty Points</TableHead>
+                <TableHead>Tier</TableHead>
+                <TableHead>Points</TableHead>
                 <TableHead>Total Spent</TableHead>
                 <TableHead className="w-20"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>{Array.from({ length: 6 }).map((__, j) => <TableCell key={j}><Skeleton className="h-4" /></TableCell>)}</TableRow>
+                <TableRow key={i}>{Array.from({ length: 7 }).map((__, j) => <TableCell key={j}><Skeleton className="h-4" /></TableCell>)}</TableRow>
               )) : items.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="py-12 text-center text-muted-foreground">
+                <TableRow><TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
                   <Users className="h-8 w-8 mx-auto mb-2 opacity-40" />No customers found
                 </TableCell></TableRow>
-              ) : items.map((c: any) => (
-                <TableRow key={c.id} data-testid={`row-customer-${c.id}`}>
-                  <TableCell>
-                    <div className="font-medium">{c.name}</div>
-                    {c.email && <div className="text-xs text-muted-foreground">{c.email}</div>}
-                  </TableCell>
-                  <TableCell className="text-sm">{c.phone ?? "—"}</TableCell>
-                  <TableCell>
-                    <Badge className={tierColors[c.membershipTier] ?? ""}>
-                      <Star className="h-3 w-3 mr-1" />{c.membershipTier}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-medium">{c.loyaltyPoints.toLocaleString()}</TableCell>
-                  <TableCell className="font-medium">${Number(c.totalPurchases).toFixed(2)}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(c)}><Edit className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeleteId(c.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              ) : items.map((c: any) => {
+                const tier = tierConfig[c.membershipTier] ?? tierConfig.basic;
+                const Icon = tier.icon;
+                const totalSpent = Number(c.totalPurchases);
+                const pctToNext = tier.nextAt ? Math.min(100, (totalSpent / tier.nextAt) * 100) : 100;
+                return (
+                  <TableRow key={c.id} data-testid={`row-customer-${c.id}`}>
+                    <TableCell className="font-mono text-xs text-muted-foreground">{c.memberNumber ?? "—"}</TableCell>
+                    <TableCell>
+                      <div className="font-medium">{c.name}</div>
+                      {c.email && <div className="text-xs text-muted-foreground">{c.email}</div>}
+                    </TableCell>
+                    <TableCell className="text-sm">{c.phone ?? "—"}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <Badge className={`${tier.color} gap-1 w-fit`}>
+                          <Icon className="h-3 w-3" />{tier.label}
+                          {tier.discount > 0 && <span className="opacity-75">·{tier.discount}%</span>}
+                        </Badge>
+                        {tier.nextAt && (
+                          <div className="w-20">
+                            <div className="h-1 bg-muted rounded-full overflow-hidden">
+                              <div className="h-full bg-primary rounded-full" style={{ width: `${pctToNext}%` }} />
+                            </div>
+                            <div className="text-[9px] text-muted-foreground mt-0.5">
+                              {fmt(Math.max(0, (tier.nextAt ?? 0) - totalSpent))} to {tier.nextLabel}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">{(c.loyaltyPoints ?? 0).toLocaleString()} pts</TableCell>
+                    <TableCell className="font-medium">{fmt(totalSpent)}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(c)}><Edit className="h-3.5 w-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeleteId(c.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
           {total > 20 && (
@@ -156,6 +205,9 @@ export default function Customers() {
               <FormField control={form.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>)} />
               <FormField control={form.control} name="phone" render={({ field }) => (<FormItem><FormLabel>Phone</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
               <FormField control={form.control} name="address" render={({ field }) => (<FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+              {!editItem && (
+                <p className="text-xs text-muted-foreground">A unique member number will be auto-generated for the new customer.</p>
+              )}
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={createMut.isPending || updateMut.isPending}>Save</Button>

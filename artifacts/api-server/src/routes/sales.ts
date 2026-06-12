@@ -8,6 +8,18 @@ function generateInvoiceNumber() {
   return `INV-${Date.now().toString().slice(-8)}`;
 }
 
+// Tier thresholds (total purchases in NPR)
+export function getCustomerTier(totalPurchases: number): { tier: string; discountPct: number } {
+  if (totalPurchases >= 50000) return { tier: "platinum", discountPct: 10 };
+  if (totalPurchases >= 10000) return { tier: "gold", discountPct: 5 };
+  return { tier: "basic", discountPct: 0 };
+}
+
+// 1 point per NPR 10 spent
+function calcPoints(total: number): number {
+  return Math.floor(total / 10);
+}
+
 router.get("/sales", async (req, res) => {
   const { dateFrom, dateTo, customerId, page = "1", limit = "20" } = req.query;
   const pageNum = parseInt(String(page));
@@ -16,7 +28,7 @@ router.get("/sales", async (req, res) => {
 
   let sales = await db.select().from(salesTable).orderBy(salesTable.createdAt);
   const customers = await db.select().from(customersTable);
-  const cMap = new Map(customers.map(c => [c.id, c.name]));
+  const cMap = new Map(customers.map(c => [c.id, { name: c.name, memberNumber: c.memberNumber }]));
 
   if (customerId) sales = sales.filter(s => s.customerId === parseInt(String(customerId)));
   if (dateFrom) sales = sales.filter(s => new Date(s.createdAt) >= new Date(String(dateFrom)));
@@ -34,7 +46,10 @@ router.get("/sales", async (req, res) => {
       tax: Number(s.tax),
       amountPaid: Number(s.amountPaid),
       change: Number(s.change),
-      customerName: s.customerId ? (cMap.get(s.customerId) ?? null) : null,
+      tierDiscountPct: Number(s.tierDiscountPct ?? 0),
+      pointsEarned: s.pointsEarned ?? 0,
+      customerName: s.customerId ? (cMap.get(s.customerId)?.name ?? null) : null,
+      memberNumber: s.customerId ? (cMap.get(s.customerId)?.memberNumber ?? null) : null,
       cashierName: null,
       items: s.items as any[],
     })),
@@ -45,12 +60,26 @@ router.get("/sales", async (req, res) => {
 });
 
 router.post("/sales", async (req, res) => {
-  const { customerId, items, discount = 0, paymentMethod, amountPaid, notes } = req.body;
-  const itemsArr = items ?? [];
+  const { customerId, items, paymentMethod, amountPaid, notes } = req.body;
+  const itemsArr: any[] = items ?? [];
+
+  // Get customer tier for discount
+  let tierDiscountPct = 0;
+  let customer = null;
+  if (customerId) {
+    const [c] = await db.select().from(customersTable).where(eq(customersTable.id, customerId));
+    customer = c;
+    if (customer) {
+      tierDiscountPct = getCustomerTier(Number(customer.totalPurchases)).discountPct;
+    }
+  }
+
   const subtotal = itemsArr.reduce((s: number, i: any) => s + (i.quantity * i.unitPrice * (1 - (i.discount ?? 0) / 100)), 0);
   const taxTotal = itemsArr.reduce((s: number, i: any) => s + (i.quantity * i.unitPrice * ((i.tax ?? 0) / 100)), 0);
-  const total = subtotal + taxTotal - discount;
+  const tierDiscount = subtotal * tierDiscountPct / 100;
+  const total = subtotal + taxTotal - tierDiscount;
   const change = Number(amountPaid) - total;
+  const pointsEarned = calcPoints(total);
 
   const itemsWithTotal = itemsArr.map((i: any) => ({
     ...i,
@@ -61,18 +90,20 @@ router.post("/sales", async (req, res) => {
     invoiceNumber: generateInvoiceNumber(),
     customerId: customerId ?? null,
     items: itemsWithTotal,
-    subtotal: String(subtotal),
-    discount: String(discount),
-    tax: String(taxTotal),
-    total: String(total),
+    subtotal: subtotal.toFixed(2),
+    discount: tierDiscount.toFixed(2),
+    tax: taxTotal.toFixed(2),
+    total: total.toFixed(2),
     amountPaid: String(amountPaid),
-    change: String(Math.max(0, change)),
+    change: Math.max(0, change).toFixed(2),
     paymentMethod,
     status: "completed",
     notes,
+    pointsEarned,
+    tierDiscountPct: tierDiscountPct.toFixed(2),
   }).returning();
 
-  // Update inventory for each item
+  // Update inventory
   for (const item of itemsArr) {
     const [inv] = await db.select().from(inventoryTable).where(eq(inventoryTable.productId, item.productId));
     if (inv) {
@@ -82,20 +113,36 @@ router.post("/sales", async (req, res) => {
     }
   }
 
-  // Update customer loyalty & purchases
-  if (customerId) {
-    const [customer] = await db.select().from(customersTable).where(eq(customersTable.id, customerId));
-    if (customer) {
-      const newTotal = Number(customer.totalPurchases) + total;
-      const newPoints = customer.loyaltyPoints + Math.floor(total / 10);
-      const tier = newTotal >= 50000 ? "platinum" : newTotal >= 20000 ? "gold" : newTotal >= 5000 ? "silver" : "bronze";
-      await db.update(customersTable).set({ totalPurchases: String(newTotal), loyaltyPoints: newPoints, membershipTier: tier, lastPurchaseDate: new Date() }).where(eq(customersTable.id, customerId));
-    }
+  // Update customer loyalty
+  if (customerId && customer) {
+    const newTotal = Number(customer.totalPurchases) + total;
+    const newPoints = customer.loyaltyPoints + pointsEarned;
+    const { tier } = getCustomerTier(newTotal);
+    await db.update(customersTable).set({
+      totalPurchases: newTotal.toFixed(2),
+      loyaltyPoints: newPoints,
+      membershipTier: tier,
+      lastPurchaseDate: new Date(),
+    }).where(eq(customersTable.id, customerId));
   }
 
-  const customers = await db.select().from(customersTable);
-  const cMap = new Map(customers.map(c => [c.id, c.name]));
-  res.status(201).json({ ...sale, total: Number(sale.total), subtotal: Number(sale.subtotal), discount: Number(sale.discount), tax: Number(sale.tax), amountPaid: Number(sale.amountPaid), change: Number(sale.change), customerName: sale.customerId ? (cMap.get(sale.customerId) ?? null) : null, cashierName: null, items: sale.items as any[] });
+  const allCustomers = await db.select().from(customersTable);
+  const cMap = new Map(allCustomers.map(c => [c.id, { name: c.name, memberNumber: c.memberNumber }]));
+  res.status(201).json({
+    ...sale,
+    total: Number(sale.total),
+    subtotal: Number(sale.subtotal),
+    discount: Number(sale.discount),
+    tax: Number(sale.tax),
+    amountPaid: Number(sale.amountPaid),
+    change: Number(sale.change),
+    tierDiscountPct: Number(sale.tierDiscountPct ?? 0),
+    pointsEarned: sale.pointsEarned ?? 0,
+    customerName: sale.customerId ? (cMap.get(sale.customerId)?.name ?? null) : null,
+    memberNumber: sale.customerId ? (cMap.get(sale.customerId)?.memberNumber ?? null) : null,
+    cashierName: null,
+    items: sale.items as any[],
+  });
 });
 
 router.get("/sales/summary/today", async (_req, res) => {
@@ -118,8 +165,22 @@ router.get("/sales/:id", async (req, res) => {
   const [sale] = await db.select().from(salesTable).where(eq(salesTable.id, id));
   if (!sale) { res.status(404).json({ error: "Not found" }); return; }
   const customers = await db.select().from(customersTable);
-  const cMap = new Map(customers.map(c => [c.id, c.name]));
-  res.json({ ...sale, total: Number(sale.total), subtotal: Number(sale.subtotal), discount: Number(sale.discount), tax: Number(sale.tax), amountPaid: Number(sale.amountPaid), change: Number(sale.change), customerName: sale.customerId ? (cMap.get(sale.customerId) ?? null) : null, cashierName: null, items: sale.items as any[] });
+  const cMap = new Map(customers.map(c => [c.id, { name: c.name, memberNumber: c.memberNumber }]));
+  res.json({
+    ...sale,
+    total: Number(sale.total),
+    subtotal: Number(sale.subtotal),
+    discount: Number(sale.discount),
+    tax: Number(sale.tax),
+    amountPaid: Number(sale.amountPaid),
+    change: Number(sale.change),
+    tierDiscountPct: Number(sale.tierDiscountPct ?? 0),
+    pointsEarned: sale.pointsEarned ?? 0,
+    customerName: sale.customerId ? (cMap.get(sale.customerId)?.name ?? null) : null,
+    memberNumber: sale.customerId ? (cMap.get(sale.customerId)?.memberNumber ?? null) : null,
+    cashierName: null,
+    items: sale.items as any[],
+  });
 });
 
 router.post("/sales/:id/return", async (req, res) => {

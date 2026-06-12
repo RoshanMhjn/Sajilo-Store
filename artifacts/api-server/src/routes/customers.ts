@@ -1,8 +1,13 @@
 import { Router } from "express";
 import { db, customersTable, salesTable } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 const router = Router();
+
+function generateMemberNumber(): string {
+  const num = Math.floor(100000 + Math.random() * 900000);
+  return `MBR-${num}`;
+}
 
 router.get("/customers", async (req, res) => {
   const { search, page = "1", limit = "20" } = req.query;
@@ -11,7 +16,11 @@ router.get("/customers", async (req, res) => {
   const offset = (pageNum - 1) * limitNum;
 
   let customers = await db.select().from(customersTable).orderBy(customersTable.name);
-  if (search) customers = customers.filter(c => c.name.toLowerCase().includes(String(search).toLowerCase()) || (c.phone && c.phone.includes(String(search))));
+  if (search) customers = customers.filter(c =>
+    c.name.toLowerCase().includes(String(search).toLowerCase()) ||
+    (c.phone && c.phone.includes(String(search))) ||
+    (c.memberNumber && c.memberNumber.toLowerCase().includes(String(search).toLowerCase()))
+  );
 
   const total = customers.length;
   const paged = customers.slice(offset, offset + limitNum);
@@ -23,7 +32,8 @@ router.get("/customers", async (req, res) => {
 
 router.post("/customers", async (req, res) => {
   const { name, email, phone, address } = req.body;
-  const [customer] = await db.insert(customersTable).values({ name, email, phone, address }).returning();
+  const memberNumber = generateMemberNumber();
+  const [customer] = await db.insert(customersTable).values({ name, email, phone, address, memberNumber }).returning();
   res.status(201).json({ ...customer, totalPurchases: Number(customer.totalPurchases) });
 });
 
@@ -53,7 +63,7 @@ router.get("/customers/:id/purchase-history", async (req, res) => {
   const id = parseInt(req.params.id);
   const sales = await db.select().from(salesTable).where(eq(salesTable.customerId, id)).orderBy(salesTable.createdAt);
   const [customer] = await db.select().from(customersTable).where(eq(customersTable.id, id));
-  res.json(sales.map(s => ({ ...s, total: Number(s.total), subtotal: Number(s.subtotal), discount: Number(s.discount), tax: Number(s.tax), amountPaid: Number(s.amountPaid), change: Number(s.change), customerName: customer?.name ?? null, cashierName: null, items: s.items as any[] })).reverse());
+  res.json(sales.map(s => ({ ...s, total: Number(s.total), subtotal: Number(s.subtotal), discount: Number(s.discount), tax: Number(s.tax), amountPaid: Number(s.amountPaid), change: Number(s.change), pointsEarned: s.pointsEarned ?? 0, customerName: customer?.name ?? null, cashierName: null, items: s.items as any[] })).reverse());
 });
 
 export default router;

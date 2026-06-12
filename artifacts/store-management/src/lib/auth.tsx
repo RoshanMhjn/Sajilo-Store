@@ -1,6 +1,22 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useGetMe, setAuthTokenGetter } from "@workspace/api-client-react";
 
+export type UserRole = "super_admin" | "manager" | "cashier" | "billing" | "staff";
+
+export const ROLE_PERMISSIONS: Record<string, string[]> = {
+  super_admin: ["*"],
+  manager: ["dashboard", "pos", "products", "inventory", "categories", "suppliers", "purchases", "sales", "customers", "employees", "attendance", "leaves", "payroll", "expenses", "notifications", "ai-insights", "ai-assistant"],
+  cashier: ["pos", "sales", "customers", "notifications"],
+  billing: ["pos", "sales", "customers", "notifications"],
+  staff: ["pos"],
+};
+
+export function hasPermission(role: string | undefined, permission: string): boolean {
+  if (!role) return false;
+  const perms = ROLE_PERMISSIONS[role] ?? ["pos"];
+  return perms.includes("*") || perms.includes(permission);
+}
+
 type AuthContextType = {
   token: string | null;
   setToken: (token: string | null) => void;
@@ -8,6 +24,7 @@ type AuthContextType = {
   isLoading: boolean;
   user: any | null;
   logout: () => void;
+  can: (permission: string) => boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,14 +54,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    if (error) {
-      setToken(null);
-    }
+    if (error) setToken(null);
   }, [error]);
 
-  const logout = () => {
-    setToken(null);
-  };
+  const can = (permission: string) => hasPermission((user as any)?.role, permission);
+
+  const logout = () => setToken(null);
 
   return (
     <AuthContext.Provider value={{
@@ -53,7 +68,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated: !!token && !!user,
       isLoading,
       user: user || null,
-      logout
+      logout,
+      can,
     }}>
       {children}
     </AuthContext.Provider>
@@ -62,8 +78,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (context === undefined) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 }

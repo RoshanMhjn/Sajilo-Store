@@ -28,15 +28,12 @@ import POS from "@/pages/pos";
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: {
-      retry: false,
-      refetchOnWindowFocus: false,
-    },
+    queries: { retry: false, refetchOnWindowFocus: false },
   },
 });
 
-function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
-  const { isAuthenticated, isLoading } = useAuth();
+function ProtectedRoute({ component: Component, permission }: { component: React.ComponentType; permission?: string }) {
+  const { isAuthenticated, isLoading, can } = useAuth();
   const [, setLocation] = useLocation();
 
   if (isLoading) {
@@ -52,6 +49,18 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
     return null;
   }
 
+  if (permission && !can(permission)) {
+    return (
+      <Layout>
+        <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
+          <div className="text-6xl">🔒</div>
+          <h2 className="text-xl font-semibold text-foreground">Access Denied</h2>
+          <p className="text-sm">You don't have permission to view this page.</p>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <Component />
@@ -63,23 +72,23 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
-      <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
-      <Route path="/pos" component={() => <ProtectedRoute component={POS} />} />
-      <Route path="/products" component={() => <ProtectedRoute component={Products} />} />
-      <Route path="/inventory" component={() => <ProtectedRoute component={Inventory} />} />
-      <Route path="/categories" component={() => <ProtectedRoute component={Categories} />} />
-      <Route path="/suppliers" component={() => <ProtectedRoute component={Suppliers} />} />
-      <Route path="/purchases" component={() => <ProtectedRoute component={Purchases} />} />
-      <Route path="/sales" component={() => <ProtectedRoute component={Sales} />} />
-      <Route path="/customers" component={() => <ProtectedRoute component={Customers} />} />
-      <Route path="/employees" component={() => <ProtectedRoute component={Employees} />} />
-      <Route path="/attendance" component={() => <ProtectedRoute component={Attendance} />} />
-      <Route path="/leaves" component={() => <ProtectedRoute component={Leaves} />} />
-      <Route path="/payroll" component={() => <ProtectedRoute component={Payroll} />} />
-      <Route path="/expenses" component={() => <ProtectedRoute component={Expenses} />} />
-      <Route path="/notifications" component={() => <ProtectedRoute component={Notifications} />} />
-      <Route path="/ai-insights" component={() => <ProtectedRoute component={AiInsights} />} />
-      <Route path="/ai-assistant" component={() => <ProtectedRoute component={AiAssistant} />} />
+      <Route path="/" component={() => <ProtectedRoute component={Dashboard} permission="dashboard" />} />
+      <Route path="/pos" component={() => <ProtectedRoute component={POS} permission="pos" />} />
+      <Route path="/products" component={() => <ProtectedRoute component={Products} permission="products" />} />
+      <Route path="/inventory" component={() => <ProtectedRoute component={Inventory} permission="inventory" />} />
+      <Route path="/categories" component={() => <ProtectedRoute component={Categories} permission="categories" />} />
+      <Route path="/suppliers" component={() => <ProtectedRoute component={Suppliers} permission="suppliers" />} />
+      <Route path="/purchases" component={() => <ProtectedRoute component={Purchases} permission="purchases" />} />
+      <Route path="/sales" component={() => <ProtectedRoute component={Sales} permission="sales" />} />
+      <Route path="/customers" component={() => <ProtectedRoute component={Customers} permission="customers" />} />
+      <Route path="/employees" component={() => <ProtectedRoute component={Employees} permission="employees" />} />
+      <Route path="/attendance" component={() => <ProtectedRoute component={Attendance} permission="attendance" />} />
+      <Route path="/leaves" component={() => <ProtectedRoute component={Leaves} permission="leaves" />} />
+      <Route path="/payroll" component={() => <ProtectedRoute component={Payroll} permission="payroll" />} />
+      <Route path="/expenses" component={() => <ProtectedRoute component={Expenses} permission="expenses" />} />
+      <Route path="/notifications" component={() => <ProtectedRoute component={Notifications} permission="notifications" />} />
+      <Route path="/ai-insights" component={() => <ProtectedRoute component={AiInsights} permission="ai-insights" />} />
+      <Route path="/ai-assistant" component={() => <ProtectedRoute component={AiAssistant} permission="ai-assistant" />} />
       <Route component={NotFound} />
     </Switch>
   );

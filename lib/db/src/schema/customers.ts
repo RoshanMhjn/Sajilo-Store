@@ -4,12 +4,13 @@ import { z } from "zod/v4";
 
 export const customersTable = pgTable("customers", {
   id: serial("id").primaryKey(),
+  memberNumber: text("member_number").unique(),
   name: text("name").notNull(),
   email: text("email"),
   phone: text("phone"),
   address: text("address"),
   loyaltyPoints: integer("loyalty_points").notNull().default(0),
-  membershipTier: text("membership_tier").notNull().default("bronze"),
+  membershipTier: text("membership_tier").notNull().default("basic"),
   totalPurchases: numeric("total_purchases", { precision: 12, scale: 2 }).notNull().default("0"),
   lastPurchaseDate: timestamp("last_purchase_date", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

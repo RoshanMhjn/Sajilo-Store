@@ -1,7 +1,7 @@
 import { useGetDashboardSummary, useGetSalesChart, useGetTopProducts, useGetLowStockItems, useGetRecentActivity } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, Package, ShoppingCart, TrendingUp, AlertTriangle, Users, ArrowUpRight, ArrowDownRight, Activity, ShoppingBag, Clock } from "lucide-react";
+import { IndianRupee, Package, ShoppingCart, TrendingUp, AlertTriangle, Users, ArrowUpRight, ArrowDownRight, Activity, ShoppingBag, Clock } from "lucide-react";
 import { Link } from "wouter";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
@@ -47,6 +47,10 @@ function timeAgo(date: string | Date) {
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
   return `${Math.floor(seconds / 86400)}d ago`;
+}
+
+function fmtNPR(amount: number) {
+  return `रू ${amount.toLocaleString("en-NP", { maximumFractionDigits: 0 })}`;
 }
 
 export default function Dashboard() {
@@ -99,9 +103,9 @@ export default function Dashboard() {
           <>
             <StatCard
               title="Today's Revenue"
-              value={`$${(summary?.todayRevenue ?? 0).toFixed(2)}`}
+              value={fmtNPR(summary?.todayRevenue ?? 0)}
               sub="vs. yesterday"
-              icon={DollarSign}
+              icon={IndianRupee}
               trend={`${summary?.revenueChange ?? 0}%`}
               trendUp={(summary?.revenueChange ?? 0) >= 0}
             />
@@ -133,7 +137,7 @@ export default function Dashboard() {
         <div className="grid gap-4 md:grid-cols-3">
           <StatCard
             title="Monthly Revenue"
-            value={`$${(summary?.monthlyRevenue ?? 0).toFixed(2)}`}
+            value={fmtNPR(summary?.monthlyRevenue ?? 0)}
             sub="this month"
             icon={TrendingUp}
             trend={`${summary?.revenueChange ?? 0}%`}
@@ -148,7 +152,7 @@ export default function Dashboard() {
           <StatCard
             title="Total Customers"
             value={summary?.totalCustomers ?? 0}
-            sub="registered accounts"
+            sub="registered members"
             icon={ShoppingBag}
           />
         </div>
@@ -156,11 +160,10 @@ export default function Dashboard() {
 
       {/* Charts Row */}
       <div className="grid gap-4 lg:grid-cols-3">
-        {/* Revenue Area Chart */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Revenue Trend</CardTitle>
-            <CardDescription>Daily revenue & sales volume — last 30 days</CardDescription>
+            <CardDescription>Daily revenue & sales volume — last 30 days (NPR)</CardDescription>
           </CardHeader>
           <CardContent>
             {chartLoading ? (
@@ -180,13 +183,13 @@ export default function Dashboard() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="date" tickFormatter={formatDate} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} interval={4} />
-                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={v => `$${v}`} />
+                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={v => `रू${(v/1000).toFixed(0)}k`} />
                   <Tooltip
                     labelFormatter={v => formatDate(v as string)}
-                    formatter={(v: number, name: string) => [name === "revenue" ? `$${v.toFixed(2)}` : v, name === "revenue" ? "Revenue" : "Sales"]}
+                    formatter={(v: number, name: string) => [name === "revenue" ? `रू ${v.toLocaleString()}` : v, name === "revenue" ? "Revenue" : "Sales"]}
                     contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", backgroundColor: "hsl(var(--card))", color: "hsl(var(--foreground))" }}
                   />
-                  <Legend formatter={v => v === "revenue" ? "Revenue" : "Sales Count"} />
+                  <Legend formatter={v => v === "revenue" ? "Revenue (NPR)" : "Sales Count"} />
                   <Area type="monotone" dataKey="revenue" stroke={CHART_COLORS.revenue} fill="url(#colorRevenue)" strokeWidth={2} dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
@@ -194,11 +197,10 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Top Products Bar Chart */}
         <Card>
           <CardHeader>
             <CardTitle>Top Products</CardTitle>
-            <CardDescription>By revenue (all time)</CardDescription>
+            <CardDescription>By revenue — all time (NPR)</CardDescription>
           </CardHeader>
           <CardContent>
             {topLoading ? (
@@ -211,7 +213,7 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={topProds.slice(0, 6)} layout="vertical" margin={{ top: 0, right: 8, left: 4, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} className="stroke-border" />
-                  <XAxis type="number" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={v => `$${v}`} />
+                  <XAxis type="number" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
                   <YAxis
                     type="category"
                     dataKey="productName"
@@ -222,7 +224,7 @@ export default function Dashboard() {
                     tickFormatter={v => v.length > 10 ? v.slice(0, 10) + "…" : v}
                   />
                   <Tooltip
-                    formatter={(v: number) => [`$${v.toFixed(2)}`, "Revenue"]}
+                    formatter={(v: number) => [`रू ${v.toLocaleString()}`, "Revenue"]}
                     contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", backgroundColor: "hsl(var(--card))", color: "hsl(var(--foreground))" }}
                   />
                   <Bar dataKey="revenue" fill={CHART_COLORS.revenue} radius={[0, 4, 4, 0]} />
@@ -235,7 +237,6 @@ export default function Dashboard() {
 
       {/* Bottom Row */}
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* Low Stock */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
@@ -271,7 +272,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Recent Activity */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
