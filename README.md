@@ -369,7 +369,6 @@ Regeneration commands depend on the scripts currently defined in `lib/api-spec/p
 .
 ├── artifacts/
 │   ├── api-server/              Express API and domain routes
-│   ├── mockup-sandbox/          UI mockup sandbox
 │   └── store-management/        Main React frontend
 ├── lib/
 │   ├── api-client-react/        Generated React Query API client

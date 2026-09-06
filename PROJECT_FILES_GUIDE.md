@@ -1,6 +1,6 @@
 # Sajilo Pasal Project Files Guide
 
-This document explains the important folders and files in the Sajilo Pasal repository, especially `.agents/memory` and `artifacts`. It also explains the difference between the API server, the mockup sandbox, and the production store-management frontend.
+This document explains the important folders and files in the Sajilo Pasal repository, especially `.agents/memory` and `artifacts`. It also explains the relationship between the API server and the production store-management frontend.
 
 ## Repository at a Glance
 
@@ -13,9 +13,7 @@ Smart-Store-Manager/
 ├── .vscode/
 ├── artifacts/
 │   ├── api-server/
-│   ├── mockup-sandbox/
 │   └── store-management/
-├── attached_assets/
 ├── lib/
 │   ├── api-client-react/
 │   ├── api-spec/
@@ -80,13 +78,12 @@ packages:
   - artifacts/*
 ```
 
-The folder currently contains three packages with different responsibilities:
+The folder currently contains two production packages:
 
-| Package            | Purpose                                  | Used by end users?                   |
-| ------------------ | ---------------------------------------- | ------------------------------------ |
-| `api-server`       | Express backend and REST API             | Yes, indirectly through the frontend |
-| `store-management` | Main React store-management application  | Yes                                  |
-| `mockup-sandbox`   | Component mockup and preview environment | No, development/design tool          |
+| Package            | Purpose                                 | Used by end users?                   |
+| ------------------ | --------------------------------------- | ------------------------------------ |
+| `api-server`       | Express backend and REST API            | Yes, indirectly through the frontend |
+| `store-management` | Main React store-management application | Yes                                  |
 
 The `artifacts` name comes from the project structure used by the workspace tooling. These are not disposable build artifacts. The source code inside these packages is part of the application.
 
@@ -293,89 +290,7 @@ The local frontend normally runs at:
 http://localhost:5173
 ```
 
-## `artifacts/mockup-sandbox`
-
-The mockup sandbox is a development and design-preview application. It is separate from the real store-management application.
-
-### What it is used for
-
-The sandbox lets developers preview individual React mockup components in isolation. This is useful when:
-
-- Designing a new screen before connecting it to the API.
-- Reviewing a component without logging into the complete application.
-- Testing visual layouts and responsive behavior.
-- Giving a workspace canvas or design tool a URL for a specific component.
-- Exploring generated mockup components without adding them to the production navigation.
-
-It is not the production supermarket application and it does not replace `store-management`.
-
-### How component previews work
-
-The sandbox uses a generated module map in `src/.generated/`. `App.tsx` receives a component path, dynamically imports the matching component, identifies an exported React component, and renders it.
-
-The key behavior is conceptually:
-
-```tsx
-const key = `./components/mockups/${componentPath}.tsx`;
-const loader = modules[key];
-const mod = await loader();
-return <ResolvedComponent />;
-```
-
-The generated module map allows the preview server to discover mockup components without manually adding every component to a central route file.
-
-### Important files
-
-```text
-artifacts/mockup-sandbox/
-├── src/
-│   ├── App.tsx
-│   ├── main.tsx
-│   ├── index.css
-│   ├── components/
-│   ├── hooks/
-│   ├── lib/
-│   └── .generated/
-├── mockupPreviewPlugin.ts
-├── vite.config.ts
-├── index.html
-├── package.json
-└── dist/
-```
-
-- `src/App.tsx`: preview renderer and fallback gallery.
-- `src/.generated/`: generated component discovery data. Do not manually edit unless the generation workflow requires it.
-- `mockupPreviewPlugin.ts`: Vite plugin that supports mockup preview behavior.
-- `vite.config.ts`: Vite configuration for this separate sandbox.
-- `src/components/ui/`: reusable visual components used by mockups.
-
-### Mockup sandbox commands
-
-```bash
-# Start the mockup preview server.
-pnpm --filter @workspace/mockup-sandbox run dev
-
-# Typecheck the sandbox.
-pnpm --filter @workspace/mockup-sandbox run typecheck
-
-# Build the sandbox.
-pnpm --filter @workspace/mockup-sandbox run build
-
-# Preview a built sandbox.
-pnpm --filter @workspace/mockup-sandbox run preview
-```
-
-The sandbox usually requires its own `PORT` and `BASE_PATH` environment variables because its Vite configuration validates them at startup. Example:
-
-```powershell
-$env:PORT="5174"
-$env:BASE_PATH="/"
-pnpm --filter @workspace/mockup-sandbox run dev
-```
-
-Use a different port from the production frontend if both need to run at the same time.
-
-## How the Three Artifact Packages Relate
+## How the Artifact Packages Relate
 
 ```text
                     ┌────────────────────────┐
@@ -395,10 +310,6 @@ Use a different port from the production frontend if both need to run at the sam
                     │ PostgreSQL schemas      │
                     └────────────────────────┘
 
-                    ┌────────────────────────┐
-                    │ mockup-sandbox           │
-                    │ Isolated UI preview tool │
-                    └────────────────────────┘
 ```
 
 The production workflow is:
@@ -441,10 +352,6 @@ Utility scripts, including `src/seed-demo.ts`, which creates demo categories, pr
 pnpm --filter @workspace/scripts run seed-demo
 ```
 
-### `attached_assets`
-
-Project assets and imported files used by the application or development tooling. Inspect individual files before removing anything because assets may be referenced by the frontend or mockups.
-
 ### `.vscode`
 
 Workspace editor configuration. The `tasks.json` file includes the API start task with the local database URL and port configuration.
@@ -465,7 +372,6 @@ These are generated or installed outputs when present:
 | Add or fix a backend endpoint         | `artifacts/api-server/src/routes`                        |
 | Add or fix a frontend screen          | `artifacts/store-management/src/pages`                   |
 | Change the sidebar or shared shell    | `artifacts/store-management/src/components`              |
-| Preview a UI component in isolation   | `artifacts/mockup-sandbox`                               |
 | Change database tables                | `lib/db/src/schema`                                      |
 | Change generated API contracts        | `lib/api-spec` then regenerate clients                   |
 | Add demo products or records          | `scripts/src/seed-demo.ts`                               |
@@ -480,9 +386,8 @@ For a new end-to-end feature:
 3. Implement the API route in `artifacts/api-server/src/routes`.
 4. Regenerate API schemas and React Query hooks.
 5. Implement the frontend page or component in `artifacts/store-management`.
-6. Add mockup-only previews in `artifacts/mockup-sandbox` when visual exploration is useful.
-7. Add or update demo data in `scripts/src/seed-demo.ts`.
-8. Run typechecks and production builds.
+6. Add or update demo data in `scripts/src/seed-demo.ts`.
+7. Run typechecks and production builds.
 
 ## Validation Commands
 
@@ -493,7 +398,6 @@ pnpm run typecheck
 pnpm run build
 pnpm --filter @workspace/api-server run typecheck
 pnpm --filter @workspace/store-management run typecheck
-pnpm --filter @workspace/mockup-sandbox run typecheck
 ```
 
 When the services are running:
@@ -514,7 +418,6 @@ Expected health response:
 - `.agents/memory` stores project knowledge for coding agents; it does not run the application.
 - `artifacts/api-server` is the Express backend.
 - `artifacts/store-management` is the real user-facing React frontend.
-- `artifacts/mockup-sandbox` is an isolated UI component preview environment.
 - `lib/db` owns PostgreSQL and Drizzle schemas.
 - `lib/api-spec`, `lib/api-zod`, and `lib/api-client-react` keep API contracts and generated client code aligned.
 - `scripts/src/seed-demo.ts` creates the demo catalog and operational data.

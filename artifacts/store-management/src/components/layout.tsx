@@ -21,8 +21,11 @@ import {
   Store,
   Menu,
   X,
+  Moon,
+  Sun,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import { useAuth } from "@/lib/auth";
 import { useListNotifications } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
@@ -170,9 +173,15 @@ const roleLabels: Record<string, string> = {
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { user, logout, can } = useAuth();
+  const { resolvedTheme, setTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [themeReady, setThemeReady] = useState(false);
   const { data: notifications } = useListNotifications();
   const unreadCount = notifications?.filter((n: any) => !n.isRead).length ?? 0;
+
+  useEffect(() => {
+    setThemeReady(true);
+  }, []);
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
@@ -271,7 +280,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="relative flex-1 flex flex-col min-w-0 overflow-hidden">
+        <div className="app-doodles" aria-hidden="true">
+          <span className="doodle-spark doodle-spark-one" />
+          <span className="doodle-spark doodle-spark-two" />
+          <span className="doodle-loop" />
+          <span className="doodle-underline" />
+        </div>
         <header className="h-12 border-b border-border bg-card flex items-center px-4 gap-3 shrink-0">
           <Button
             variant="ghost"
@@ -286,6 +301,31 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             )}
           </Button>
           <div className="flex-1" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={() =>
+              setTheme(resolvedTheme === "dark" ? "light" : "dark")
+            }
+            aria-label={
+              resolvedTheme === "dark"
+                ? "Switch to light mode"
+                : "Switch to dark mode"
+            }
+            title={
+              resolvedTheme === "dark"
+                ? "Switch to light mode"
+                : "Switch to dark mode"
+            }
+            disabled={!themeReady}
+          >
+            {resolvedTheme === "dark" ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
+          </Button>
           {can("notifications") && (
             <Link
               href="/notifications"
@@ -300,7 +340,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </Link>
           )}
         </header>
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="relative z-10 flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>
   );
