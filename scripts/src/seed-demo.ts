@@ -1445,10 +1445,12 @@ async function seed() {
           date: date.toISOString().slice(0, 10),
           checkIn,
           checkOut,
-          workingHours: String(
-            8 + (employee.id % 3) + (employee.id % 2) * 0.5,
+          workingHours: (
+            8 +
+            (employee.id % 3) +
+            (employee.id % 2) * 0.5
           ).toFixed(1),
-          overtime: String((employee.id % 4) * 0.5).toFixed(1),
+          overtime: ((employee.id % 4) * 0.5).toFixed(1),
           status: employee.status === "active" ? "present" : "absent",
         });
       }

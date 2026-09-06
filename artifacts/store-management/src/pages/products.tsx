@@ -165,13 +165,13 @@ export default function Products() {
     try {
       const payload = {
         ...values,
-        costPrice: String(values.costPrice),
-        sellingPrice: String(values.sellingPrice),
-        tax: String(values.tax),
-        discount: String(values.discount),
-        minStock: String(values.minStock),
-        maxStock: String(values.maxStock),
-        reorderPoint: String(values.reorderPoint),
+        costPrice: values.costPrice,
+        sellingPrice: values.sellingPrice,
+        tax: values.tax,
+        discount: values.discount,
+        minStock: values.minStock,
+        maxStock: values.maxStock,
+        reorderPoint: values.reorderPoint,
       };
       if (editProduct) {
         await updateMutation.mutateAsync({

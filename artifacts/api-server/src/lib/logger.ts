@@ -1,5 +1,19 @@
 type LogMethod = (...args: unknown[]) => void;
 
+type Logger = {
+  levels: { values: typeof levelOrder };
+  child: (bindings?: Record<string, unknown>) => Logger;
+  fatal: LogMethod;
+  error: LogMethod;
+  warn: LogMethod;
+  info: LogMethod;
+  debug: LogMethod;
+  trace: LogMethod;
+  silent: LogMethod;
+  level: string;
+  setLevel: (value: string) => void;
+};
+
 const defaultLevel = (process.env.LOG_LEVEL ?? "info").toLowerCase();
 const levelOrder = {
   trace: 10,
@@ -25,7 +39,7 @@ function formatArgs(args: unknown[]) {
     .join(" ");
 }
 
-function buildLogger(context: Record<string, unknown> = {}) {
+function buildLogger(context: Record<string, unknown> = {}): Logger {
   const write = (level: keyof typeof levelOrder, ...args: unknown[]) => {
     const message = formatArgs(args);
     const prefix = Object.keys(context).length
@@ -49,7 +63,7 @@ function buildLogger(context: Record<string, unknown> = {}) {
     }
   };
 
-  const logger = {
+  const logger: Logger = {
     levels: { values: levelOrder },
     child(bindings: Record<string, unknown> = {}) {
       return buildLogger({ ...context, ...bindings });
@@ -65,18 +79,6 @@ function buildLogger(context: Record<string, unknown> = {}) {
     setLevel: (value: string) => {
       logger.level = value.toLowerCase();
     },
-  } satisfies {
-    levels: { values: typeof levelOrder };
-    child: (bindings?: Record<string, unknown>) => typeof logger;
-    fatal: LogMethod;
-    error: LogMethod;
-    warn: LogMethod;
-    info: LogMethod;
-    debug: LogMethod;
-    trace: LogMethod;
-    silent: LogMethod;
-    level: string;
-    setLevel: (value: string) => void;
   };
 
   return logger;

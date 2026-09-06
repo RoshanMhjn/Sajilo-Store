@@ -26,4 +26,17 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
 
+app.use(
+  (
+    err: unknown,
+    _req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction,
+  ) => {
+    logger.error(err, "request failed");
+    if (res.headersSent) return;
+    res.status(500).json({ error: "Internal server error" });
+  },
+);
+
 export default app;

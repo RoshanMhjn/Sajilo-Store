@@ -1,14 +1,21 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"label": "Start API backend",
-			"type": "shell",
-			"command": "cmd.exe /C \"set DATABASE_URL=postgresql://appuser:password@localhost:5432/smart_store_manager && set PORT=5000 && cd /d C:\\Users\\rm982\\OneDrive\\Desktop\\Smart-Store-Manager && pnpm --filter @workspace/api-server run start\"",
-			"args": [],
-			"isBackground": true,
-			"problemMatcher": [],
-			"group": "build"
-		}
-	]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start API backend",
+      "type": "shell",
+      "command": "pnpm --filter @workspace/api-server run start",
+      "args": [],
+      "isBackground": true,
+      "problemMatcher": [],
+      "options": {
+        "cwd": "C:\\Users\\rm982\\OneDrive\\Desktop\\Smart-Store-Manager",
+        "env": {
+          "DATABASE_URL": "postgresql://appuser:password@localhost:5432/smart_store_manager",
+          "PORT": "5000"
+        }
+      },
+      "group": "build"
+    }
+  ]
 }
