@@ -1,6 +1,6 @@
-# Smart Store Manager: Major Features and Code Guide
+# Sajilo Pasal: Major Features and Code Guide
 
-This document explains the main capabilities of Smart Store Manager and points to the code that implements them. The application is a pnpm monorepo with:
+This document explains the main capabilities of Sajilo Pasal and points to the code that implements them. The application is a pnpm monorepo with:
 
 - A React frontend in `artifacts/store-management`.
 - An Express API in `artifacts/api-server`.

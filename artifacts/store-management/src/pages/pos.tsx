@@ -247,7 +247,7 @@ export default function POS() {
       {lastSale && (
         <div className="print-receipt p-4 font-mono text-xs">
           <div className="text-center font-bold text-base mb-1">
-            Supermarket OS
+            Sajilo Pasal
           </div>
           <div className="text-center text-xs mb-1">
             Kathmandu, Nepal | Tel: 01-4XXXXXX

@@ -1,4 +1,4 @@
-# AI-Powered Supermarket Store Management System
+# Sajilo Pasal Store Management System
 
 ## Project Overview
 

@@ -1,6 +1,6 @@
-# Smart Store Manager
+# Sajilo Pasal
 
-Smart Store Manager is a full-stack supermarket and retail operations system. It provides point-of-sale checkout, product and inventory management, customer loyalty, supplier and purchase-order workflows, employee management, attendance, leave, payroll, expenses, notifications, dashboards, and rule-based analytics.
+Sajilo Pasal is a full-stack supermarket and retail operations system. It provides point-of-sale checkout, product and inventory management, customer loyalty, supplier and purchase-order workflows, employee management, attendance, leave, payroll, expenses, notifications, dashboards, and rule-based analytics.
 
 The project is organized as a pnpm monorepo:
 

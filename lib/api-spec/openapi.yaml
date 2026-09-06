@@ -3,7 +3,7 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: AI-Powered Supermarket Store Management System API
+  description: Sajilo Pasal store management API
 servers:
   - url: /api
     description: Base API path
@@ -1452,7 +1452,8 @@ components:
           type: string
         role:
           type: string
-          enum: [super_admin, store_manager, cashier, inventory_staff, accountant]
+          enum:
+            [super_admin, store_manager, cashier, inventory_staff, accountant]
         avatar:
           type: ["string", "null"]
         createdAt:
@@ -1469,7 +1470,18 @@ components:
 
     DashboardSummary:
       type: object
-      required: [todaySales, todayRevenue, totalProducts, lowStockCount, pendingOrders, activeEmployees, totalCustomers, monthlyRevenue, monthlyProfit]
+      required:
+        [
+          todaySales,
+          todayRevenue,
+          totalProducts,
+          lowStockCount,
+          pendingOrders,
+          activeEmployees,
+          totalCustomers,
+          monthlyRevenue,
+          monthlyProfit,
+        ]
       properties:
         todaySales:
           type: number
@@ -2178,7 +2190,8 @@ components:
           type: string
         role:
           type: string
-          enum: [super_admin, store_manager, cashier, inventory_staff, accountant]
+          enum:
+            [super_admin, store_manager, cashier, inventory_staff, accountant]
         joiningDate:
           type: string
         salary:
@@ -2211,7 +2224,8 @@ components:
           type: string
         role:
           type: string
-          enum: [super_admin, store_manager, cashier, inventory_staff, accountant]
+          enum:
+            [super_admin, store_manager, cashier, inventory_staff, accountant]
         joiningDate:
           type: string
         salary:
@@ -2234,7 +2248,8 @@ components:
           type: string
         role:
           type: string
-          enum: [super_admin, store_manager, cashier, inventory_staff, accountant]
+          enum:
+            [super_admin, store_manager, cashier, inventory_staff, accountant]
         salary:
           type: number
         status:
@@ -2403,7 +2418,18 @@ components:
           type: string
         category:
           type: string
-          enum: [rent, electricity, water, maintenance, internet, transportation, salaries, supplies, other]
+          enum:
+            [
+              rent,
+              electricity,
+              water,
+              maintenance,
+              internet,
+              transportation,
+              salaries,
+              supplies,
+              other,
+            ]
         amount:
           type: number
         date:
@@ -2428,7 +2454,18 @@ components:
           type: string
         category:
           type: string
-          enum: [rent, electricity, water, maintenance, internet, transportation, salaries, supplies, other]
+          enum:
+            [
+              rent,
+              electricity,
+              water,
+              maintenance,
+              internet,
+              transportation,
+              salaries,
+              supplies,
+              other,
+            ]
         amount:
           type: number
         date:
@@ -2445,7 +2482,18 @@ components:
           type: string
         category:
           type: string
-          enum: [rent, electricity, water, maintenance, internet, transportation, salaries, supplies, other]
+          enum:
+            [
+              rent,
+              electricity,
+              water,
+              maintenance,
+              internet,
+              transportation,
+              salaries,
+              supplies,
+              other,
+            ]
         amount:
           type: number
         date:
@@ -2477,7 +2525,14 @@ components:
           type: integer
         type:
           type: string
-          enum: [low_stock, expiring_product, payroll_due, purchase_approval, system]
+          enum:
+            [
+              low_stock,
+              expiring_product,
+              payroll_due,
+              purchase_approval,
+              system,
+            ]
         title:
           type: string
         message:
@@ -2497,7 +2552,14 @@ components:
           type: string
         type:
           type: string
-          enum: [sales_trend, inventory_alert, revenue_change, product_performance, opportunity]
+          enum:
+            [
+              sales_trend,
+              inventory_alert,
+              revenue_change,
+              product_performance,
+              opportunity,
+            ]
         title:
           type: string
         description:
@@ -2531,7 +2593,14 @@ components:
 
     SlowMovingProduct:
       type: object
-      required: [productId, productName, daysSinceLastSale, currentStock, recommendation]
+      required:
+        [
+          productId,
+          productName,
+          daysSinceLastSale,
+          currentStock,
+          recommendation,
+        ]
       properties:
         productId:
           type: integer
@@ -2584,7 +2653,8 @@ components:
 
     ReorderSuggestion:
       type: object
-      required: [productId, productName, currentStock, suggestedQuantity, estimatedCost]
+      required:
+        [productId, productName, currentStock, suggestedQuantity, estimatedCost]
       properties:
         productId:
           type: integer

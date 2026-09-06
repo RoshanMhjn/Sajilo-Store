@@ -1,10 +1,10 @@
-# Smart Store Manager Project Files Guide
+# Sajilo Pasal Project Files Guide
 
-This document explains the important folders and files in the Smart Store Manager repository, especially `.agents/memory` and `artifacts`. It also explains the difference between the API server, the mockup sandbox, and the production store-management frontend.
+This document explains the important folders and files in the Sajilo Pasal repository, especially `.agents/memory` and `artifacts`. It also explains the difference between the API server, the mockup sandbox, and the production store-management frontend.
 
 ## Repository at a Glance
 
-Smart Store Manager is a pnpm monorepo. The root contains shared configuration, application packages, database code, generated API code, scripts, and documentation.
+Sajilo Pasal is a pnpm monorepo. The root contains shared configuration, application packages, database code, generated API code, scripts, and documentation.
 
 ```text
 Smart-Store-Manager/
@@ -82,11 +82,11 @@ packages:
 
 The folder currently contains three packages with different responsibilities:
 
-| Package | Purpose | Used by end users? |
-| --- | --- | --- |
-| `api-server` | Express backend and REST API | Yes, indirectly through the frontend |
-| `store-management` | Main React store-management application | Yes |
-| `mockup-sandbox` | Component mockup and preview environment | No, development/design tool |
+| Package            | Purpose                                  | Used by end users?                   |
+| ------------------ | ---------------------------------------- | ------------------------------------ |
+| `api-server`       | Express backend and REST API             | Yes, indirectly through the frontend |
+| `store-management` | Main React store-management application  | Yes                                  |
+| `mockup-sandbox`   | Component mockup and preview environment | No, development/design tool          |
 
 The `artifacts` name comes from the project structure used by the workspace tooling. These are not disposable build artifacts. The source code inside these packages is part of the application.
 
@@ -459,17 +459,17 @@ These are generated or installed outputs when present:
 
 ## Which Package Should You Use?
 
-| Goal | Package or folder |
-| --- | --- |
-| Run the actual store application | `artifacts/store-management` plus `artifacts/api-server` |
-| Add or fix a backend endpoint | `artifacts/api-server/src/routes` |
-| Add or fix a frontend screen | `artifacts/store-management/src/pages` |
-| Change the sidebar or shared shell | `artifacts/store-management/src/components` |
-| Preview a UI component in isolation | `artifacts/mockup-sandbox` |
-| Change database tables | `lib/db/src/schema` |
-| Change generated API contracts | `lib/api-spec` then regenerate clients |
-| Add demo products or records | `scripts/src/seed-demo.ts` |
-| Record project conventions for agents | `.agents/memory` |
+| Goal                                  | Package or folder                                        |
+| ------------------------------------- | -------------------------------------------------------- |
+| Run the actual store application      | `artifacts/store-management` plus `artifacts/api-server` |
+| Add or fix a backend endpoint         | `artifacts/api-server/src/routes`                        |
+| Add or fix a frontend screen          | `artifacts/store-management/src/pages`                   |
+| Change the sidebar or shared shell    | `artifacts/store-management/src/components`              |
+| Preview a UI component in isolation   | `artifacts/mockup-sandbox`                               |
+| Change database tables                | `lib/db/src/schema`                                      |
+| Change generated API contracts        | `lib/api-spec` then regenerate clients                   |
+| Add demo products or records          | `scripts/src/seed-demo.ts`                               |
+| Record project conventions for agents | `.agents/memory`                                         |
 
 ## Recommended Development Order
 
@@ -506,7 +506,7 @@ curl http://localhost:5173/api/healthz
 Expected health response:
 
 ```json
-{"status":"ok"}
+{ "status": "ok" }
 ```
 
 ## Summary

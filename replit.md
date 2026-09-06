@@ -1,6 +1,6 @@
-# [Project name]
+# Sajilo Pasal
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Sajilo Pasal is a full-stack store management system for point of sale, inventory, customers, employees, payroll, expenses, and business insights.
 
 ## Run & Operate
 
