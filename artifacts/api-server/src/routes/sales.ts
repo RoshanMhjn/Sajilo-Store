@@ -6,8 +6,9 @@ import {
   inventoryTable,
   inventoryMovementsTable,
   saleReturnsTable,
+  productBatchesTable,
 } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { auditLog, getRequestUserId } from "../lib/audit";
 
 const router = Router();
@@ -126,67 +127,104 @@ router.post("/sales", async (req, res) => {
   }));
   const cashierId = getRequestUserId(req);
 
-  const [sale] = await db
-    .insert(salesTable)
-    .values({
-      invoiceNumber: generateInvoiceNumber(),
-      customerId: customerId ?? null,
-      items: itemsWithTotal,
-      subtotal: subtotal.toFixed(2),
-      discount: tierDiscount.toFixed(2),
-      tax: taxTotal.toFixed(2),
-      total: total.toFixed(2),
-      amountPaid: String(amountPaid),
-      change: Math.max(0, change).toFixed(2),
-      paymentMethod,
-      status: "completed",
-      notes,
-      cashierId,
-      pointsEarned,
-      tierDiscountPct: tierDiscountPct.toFixed(2),
-    })
-    .returning();
+  const [sale] = await db.transaction(async (tx) => {
+    const [createdSale] = await tx
+      .insert(salesTable)
+      .values({
+        invoiceNumber: generateInvoiceNumber(),
+        customerId: customerId ?? null,
+        items: itemsWithTotal,
+        subtotal: subtotal.toFixed(2),
+        discount: tierDiscount.toFixed(2),
+        tax: taxTotal.toFixed(2),
+        total: total.toFixed(2),
+        amountPaid: String(amountPaid),
+        change: Math.max(0, change).toFixed(2),
+        paymentMethod,
+        status: "completed",
+        notes,
+        cashierId,
+        pointsEarned,
+        tierDiscountPct: tierDiscountPct.toFixed(2),
+      })
+      .returning();
 
-  // Update inventory
-  for (const item of itemsArr) {
-    const [inv] = await db
-      .select()
-      .from(inventoryTable)
-      .where(eq(inventoryTable.productId, item.productId));
-    if (inv) {
-      const newQty = Math.max(0, Number(inv.quantity) - item.quantity);
-      await db
+    for (const item of itemsArr) {
+      const [inv] = await tx
+        .select()
+        .from(inventoryTable)
+        .where(eq(inventoryTable.productId, item.productId));
+      if (!inv || Number(inv.quantity) < Number(item.quantity))
+        throw new Error(`Insufficient stock for product ${item.productId}`);
+      const batches = await tx
+        .select()
+        .from(productBatchesTable)
+        .where(
+          and(
+            eq(productBatchesTable.productId, item.productId),
+            eq(productBatchesTable.enabled, 1),
+          ),
+        )
+        .orderBy(
+          sql`${productBatchesTable.expiryDate} is null`,
+          productBatchesTable.expiryDate,
+        );
+      const datedBatches = batches.filter(
+        (batch) => Number(batch.quantity) > 0,
+      );
+      if (datedBatches.length > 0) {
+        let remaining = Number(item.quantity);
+        for (const batch of datedBatches) {
+          if (
+            batch.expiryDate &&
+            new Date(`${batch.expiryDate}T23:59:59`) < new Date()
+          )
+            continue;
+          const used = Math.min(remaining, Number(batch.quantity));
+          if (!used) continue;
+          await tx
+            .update(productBatchesTable)
+            .set({ quantity: String(Number(batch.quantity) - used) })
+            .where(eq(productBatchesTable.id, batch.id));
+          remaining -= used;
+          if (remaining <= 0) break;
+        }
+        if (remaining > 0)
+          throw new Error(
+            `Insufficient non-expired stock for product ${item.productId}`,
+          );
+      }
+      const newQty = Number(inv.quantity) - Number(item.quantity);
+      await tx
         .update(inventoryTable)
         .set({ quantity: String(newQty) })
         .where(eq(inventoryTable.productId, item.productId));
-      await db
-        .insert(inventoryMovementsTable)
-        .values({
-          productId: item.productId,
-          type: "stock_out",
-          quantity: String(item.quantity),
-          reference: sale.invoiceNumber,
-          notes: "POS Sale",
-          createdBy: "system",
-        });
+      await tx.insert(inventoryMovementsTable).values({
+        productId: item.productId,
+        type: "stock_out",
+        quantity: String(item.quantity),
+        reference: createdSale.invoiceNumber,
+        notes: "POS Sale",
+        createdBy: "system",
+      });
     }
-  }
 
-  // Update customer loyalty
-  if (customerId && customer) {
-    const newTotal = Number(customer.totalPurchases) + total;
-    const newPoints = customer.loyaltyPoints + pointsEarned;
-    const { tier } = getCustomerTier(newTotal);
-    await db
-      .update(customersTable)
-      .set({
-        totalPurchases: newTotal.toFixed(2),
-        loyaltyPoints: newPoints,
-        membershipTier: tier,
-        lastPurchaseDate: new Date(),
-      })
-      .where(eq(customersTable.id, customerId));
-  }
+    if (customerId && customer) {
+      const newTotal = Number(customer.totalPurchases) + total;
+      const newPoints = customer.loyaltyPoints + pointsEarned;
+      const { tier } = getCustomerTier(newTotal);
+      await tx
+        .update(customersTable)
+        .set({
+          totalPurchases: newTotal.toFixed(2),
+          loyaltyPoints: newPoints,
+          membershipTier: tier,
+          lastPurchaseDate: new Date(),
+        })
+        .where(eq(customersTable.id, customerId));
+    }
+    return [createdSale];
+  });
 
   await auditLog({
     req,
@@ -340,11 +378,9 @@ router.post("/sales/:id/return", async (req, res) => {
       (returnedByProduct.get(Number(item.productId)) ?? 0) + quantity >
         Number(original.quantity)
     ) {
-      res
-        .status(400)
-        .json({
-          error: `Invalid refundable quantity for product ${item.productId}`,
-        });
+      res.status(400).json({
+        error: `Invalid refundable quantity for product ${item.productId}`,
+      });
       return;
     }
     refundAmount +=
@@ -378,16 +414,14 @@ router.post("/sales/:id/return", async (req, res) => {
             ),
           })
           .where(eq(inventoryTable.id, inventory.id));
-      await tx
-        .insert(inventoryMovementsTable)
-        .values({
-          productId: Number(item.productId),
-          type: "returned",
-          quantity: String(item.quantity),
-          reference: sale.invoiceNumber,
-          notes: "Sale refund",
-          createdBy: cashierId ? String(cashierId) : "system",
-        });
+      await tx.insert(inventoryMovementsTable).values({
+        productId: Number(item.productId),
+        type: "returned",
+        quantity: String(item.quantity),
+        reference: sale.invoiceNumber,
+        notes: "Sale refund",
+        createdBy: cashierId ? String(cashierId) : "system",
+      });
     }
     if (sale.customerId) {
       const [customer] = await tx

@@ -7,6 +7,8 @@ import {
   getListInventoryQueryKey,
   getListInventoryMovementsQueryKey,
   getListProductsQueryKey,
+  useGetInventoryValuation,
+  useListInventoryAlerts,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -103,6 +105,9 @@ export default function Inventory() {
   const { data: inventory, isLoading } = useListInventory({});
   const { data: movements, isLoading: movementsLoading } =
     useListInventoryMovements({});
+  const { data: valuation, isLoading: valuationLoading } =
+    useGetInventoryValuation();
+  const { data: alerts } = useListInventoryAlerts();
   const createMovement = useCreateInventoryMovement();
   const deleteProduct = useDeleteProduct();
 
@@ -165,6 +170,31 @@ export default function Inventory() {
           <Plus className="h-4 w-4 mr-2" />
           Adjust Stock
         </Button>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        {[
+          ["Total products", (valuation as any)?.totalProducts ?? 0],
+          ["Units in stock", (valuation as any)?.totalUnits ?? 0],
+          [
+            "Inventory cost",
+            `NPR ${Number((valuation as any)?.inventoryCostValue ?? 0).toLocaleString()}`,
+          ],
+          [
+            "Potential sales",
+            `NPR ${Number((valuation as any)?.potentialSalesValue ?? 0).toLocaleString()}`,
+          ],
+          ["Active alerts", (alerts as any[])?.length ?? 0],
+        ].map(([label, value]) => (
+          <Card key={String(label)}>
+            <CardContent className="p-4">
+              <div className="text-xs text-muted-foreground">{label}</div>
+              <div className="text-lg font-semibold mt-1">
+                {valuationLoading ? "..." : value}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <Tabs defaultValue="levels">

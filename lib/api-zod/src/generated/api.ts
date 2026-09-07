@@ -448,6 +448,81 @@ export const CreateInventoryMovementBody = zod.object({
 
 
 /**
+ * @summary List product batches
+ */
+export const ListProductBatchesQueryParams = zod.object({
+  "productId": zod.coerce.number().optional()
+})
+
+
+/**
+ * @summary Create product batch
+ */
+export const createProductBatchBodyQuantityMin = 0;
+
+export const createProductBatchBodyCostPriceMin = 0;
+
+
+
+export const CreateProductBatchBody = zod.object({
+  "productId": zod.number(),
+  "batchNumber": zod.string(),
+  "supplierId": zod.number().nullish(),
+  "manufacturingDate": zod.coerce.date().nullish(),
+  "expiryDate": zod.coerce.date().nullish(),
+  "quantity": zod.number().min(createProductBatchBodyQuantityMin).optional(),
+  "costPrice": zod.number().min(createProductBatchBodyCostPriceMin).optional()
+})
+
+
+/**
+ * @summary List expiring batches
+ */
+export const listExpiringBatchesQueryDaysDefault = 30;
+
+export const ListExpiringBatchesQueryParams = zod.object({
+  "days": zod.coerce.number().default(listExpiringBatchesQueryDaysDefault)
+})
+
+
+/**
+ * @summary Dispose damaged, expired, or wasted inventory
+ */
+export const disposeInventoryBodyQuantityExclusiveMin = 0;
+
+
+
+export const DisposeInventoryBody = zod.object({
+  "productId": zod.number(),
+  "quantity": zod.number().gt(disposeInventoryBodyQuantityExclusiveMin),
+  "type": zod.enum(['damaged', 'expired', 'wasted']),
+  "notes": zod.string().optional()
+})
+
+
+/**
+ * @summary Get revenue, COGS, and profit report
+ */
+export const GetProfitReportQueryParams = zod.object({
+  "dateFrom": zod.date().optional(),
+  "dateTo": zod.date().optional()
+})
+
+export const GetProfitReportResponse = zod.object({
+  "revenue": zod.number(),
+  "cogs": zod.number(),
+  "grossProfit": zod.number(),
+  "generalExpenses": zod.number().optional(),
+  "payrollExpenses": zod.number().optional(),
+  "operatingExpenses": zod.number(),
+  "netProfit": zod.number(),
+  "products": zod.array(zod.object({
+
+}).passthrough()).optional()
+})
+
+
+/**
  * @summary List suppliers
  */
 export const ListSuppliersQueryParams = zod.object({

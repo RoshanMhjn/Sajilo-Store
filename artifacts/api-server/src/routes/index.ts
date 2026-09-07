@@ -18,6 +18,7 @@ import notificationsRouter from "./notifications";
 import aiRouter from "./ai";
 import auditRouter from "./audit";
 import posRouter from "./pos";
+import inventoryReportsRouter from "./inventory-reports";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,6 @@ router.use(notificationsRouter);
 router.use(aiRouter);
 router.use(auditRouter);
 router.use(posRouter);
+router.use(inventoryReportsRouter);
 
 export default router;

@@ -197,6 +197,7 @@ router.patch("/products/:id", async (req, res) => {
     "minStock",
     "maxStock",
     "reorderPoint",
+    "reorderQuantity",
     "imageUrl",
     "status",
   ];

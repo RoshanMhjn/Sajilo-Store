@@ -43,6 +43,9 @@ export const productsTable = pgTable(
     reorderPoint: numeric("reorder_point", { precision: 12, scale: 2 })
       .notNull()
       .default("10"),
+    reorderQuantity: numeric("reorder_quantity", { precision: 12, scale: 2 })
+      .notNull()
+      .default("0"),
     imageUrl: text("image_url"),
     status: text("status").notNull().default("active"),
     createdAt: timestamp("created_at", { withTimezone: true })

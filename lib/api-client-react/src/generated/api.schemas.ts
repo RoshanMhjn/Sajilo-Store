@@ -276,6 +276,51 @@ export interface InventoryMovementInput {
   notes?: string;
 }
 
+export interface ProductBatchInput {
+  productId: number;
+  batchNumber: string;
+  /** @nullable */
+  supplierId?: number | null;
+  /** @nullable */
+  manufacturingDate?: string | null;
+  /** @nullable */
+  expiryDate?: string | null;
+  /** @minimum 0 */
+  quantity?: number;
+  /** @minimum 0 */
+  costPrice?: number;
+}
+
+export type InventoryDisposalInputType = typeof InventoryDisposalInputType[keyof typeof InventoryDisposalInputType];
+
+
+export const InventoryDisposalInputType = {
+  damaged: 'damaged',
+  expired: 'expired',
+  wasted: 'wasted',
+} as const;
+
+export interface InventoryDisposalInput {
+  productId: number;
+  /** @exclusiveMinimum 0 */
+  quantity: number;
+  type: InventoryDisposalInputType;
+  notes?: string;
+}
+
+export type ProfitReportProductsItem = { [key: string]: unknown };
+
+export interface ProfitReport {
+  revenue: number;
+  cogs: number;
+  grossProfit: number;
+  generalExpenses?: number;
+  payrollExpenses?: number;
+  operatingExpenses: number;
+  netProfit: number;
+  products?: ProfitReportProductsItem[];
+}
+
 export type SupplierStatus = typeof SupplierStatus[keyof typeof SupplierStatus];
 
 
@@ -1086,6 +1131,19 @@ warehouseId?: number;
 export type ListInventoryMovementsParams = {
 productId?: number;
 type?: string;
+};
+
+export type ListProductBatchesParams = {
+productId?: number;
+};
+
+export type ListExpiringBatchesParams = {
+days?: number;
+};
+
+export type GetProfitReportParams = {
+dateFrom?: string;
+dateTo?: string;
 };
 
 export type ListSuppliersParams = {

@@ -450,6 +450,92 @@ paths:
               schema:
                 $ref: "#/components/schemas/InventoryMovement"
 
+  /inventory/valuation:
+    get:
+      operationId: getInventoryValuation
+      tags: [inventory]
+      summary: Get inventory valuation
+      responses:
+        "200": { description: Inventory valuation }
+
+  /inventory/alerts:
+    get:
+      operationId: listInventoryAlerts
+      tags: [inventory]
+      summary: List stock alerts
+      responses:
+        "200": { description: Stock alerts }
+
+  /inventory/analytics:
+    get:
+      operationId: getInventoryAnalytics
+      tags: [inventory]
+      summary: Get inventory analytics
+      responses:
+        "200": { description: Inventory analytics }
+
+  /inventory/batches:
+    get:
+      operationId: listProductBatches
+      tags: [inventory]
+      summary: List product batches
+      parameters:
+        - { name: productId, in: query, schema: { type: integer } }
+      responses:
+        "200": { description: Product batches }
+    post:
+      operationId: createProductBatch
+      tags: [inventory]
+      summary: Create product batch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductBatchInput"
+      responses:
+        "201": { description: Batch created }
+
+  /inventory/expiry:
+    get:
+      operationId: listExpiringBatches
+      tags: [inventory]
+      summary: List expiring batches
+      parameters:
+        - { name: days, in: query, schema: { type: integer, default: 30 } }
+      responses:
+        "200": { description: Expiry results }
+
+  /inventory/disposals:
+    post:
+      operationId: disposeInventory
+      tags: [inventory]
+      summary: Dispose damaged, expired, or wasted inventory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryDisposalInput"
+      responses:
+        "201": { description: Disposal recorded }
+
+  /reports/profit:
+    get:
+      operationId: getProfitReport
+      tags: [dashboard]
+      summary: Get revenue, COGS, and profit report
+      parameters:
+        - { name: dateFrom, in: query, schema: { type: string, format: date } }
+        - { name: dateTo, in: query, schema: { type: string, format: date } }
+      responses:
+        "200":
+          description: Profit report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfitReport"
+
   # SUPPLIERS
   /suppliers:
     get:
@@ -1962,6 +2048,40 @@ components:
           type: string
         notes:
           type: string
+
+    ProductBatchInput:
+      type: object
+      required: [productId, batchNumber]
+      properties:
+        productId: { type: integer }
+        batchNumber: { type: string }
+        supplierId: { type: [integer, "null"] }
+        manufacturingDate: { type: [string, "null"], format: date }
+        expiryDate: { type: [string, "null"], format: date }
+        quantity: { type: number, minimum: 0 }
+        costPrice: { type: number, minimum: 0 }
+
+    InventoryDisposalInput:
+      type: object
+      required: [productId, quantity, type]
+      properties:
+        productId: { type: integer }
+        quantity: { type: number, exclusiveMinimum: 0 }
+        type: { type: string, enum: [damaged, expired, wasted] }
+        notes: { type: string }
+
+    ProfitReport:
+      type: object
+      required: [revenue, cogs, grossProfit, operatingExpenses, netProfit]
+      properties:
+        revenue: { type: number }
+        cogs: { type: number }
+        grossProfit: { type: number }
+        generalExpenses: { type: number }
+        payrollExpenses: { type: number }
+        operatingExpenses: { type: number }
+        netProfit: { type: number }
+        products: { type: array, items: { type: object } }
 
     Supplier:
       type: object

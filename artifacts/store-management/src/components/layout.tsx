@@ -24,6 +24,7 @@ import {
   Moon,
   Sun,
   ShieldCheck,
+  BarChart3,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
@@ -146,6 +147,12 @@ const navItems = [
         href: "/expenses",
         label: "Expenses",
         icon: TrendingUp,
+        permission: "expenses",
+      },
+      {
+        href: "/financial-reports",
+        label: "Financial Reports",
+        icon: BarChart3,
         permission: "expenses",
       },
     ],

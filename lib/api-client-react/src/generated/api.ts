@@ -46,7 +46,9 @@ import type {
   ExpenseInput,
   ExpenseSummaryItem,
   ExpenseUpdate,
+  GetProfitReportParams,
   HealthStatus,
+  InventoryDisposalInput,
   InventoryItem,
   InventoryMovement,
   InventoryMovementInput,
@@ -57,10 +59,12 @@ import type {
   ListCustomersParams,
   ListEmployeesParams,
   ListExpensesParams,
+  ListExpiringBatchesParams,
   ListInventoryMovementsParams,
   ListInventoryParams,
   ListLeavesParams,
   ListPayrollParams,
+  ListProductBatchesParams,
   ListProductsParams,
   ListPurchaseOrdersParams,
   ListSalesParams,
@@ -73,9 +77,11 @@ import type {
   PayrollProcessInput,
   PayrollRecord,
   Product,
+  ProductBatchInput,
   ProductInput,
   ProductList,
   ProductUpdate,
+  ProfitReport,
   PurchaseOrder,
   PurchaseOrderInput,
   PurchaseOrderUpdate,
@@ -1774,6 +1780,631 @@ export const useCreateInventoryMovement = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getCreateInventoryMovementMutationOptions(options));
     }
+
+export const getGetInventoryValuationUrl = () => {
+
+
+
+
+  return `/api/inventory/valuation`
+}
+
+/**
+ * @summary Get inventory valuation
+ */
+export const getInventoryValuation = async ( options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getGetInventoryValuationUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetInventoryValuationQueryKey = () => {
+    return [
+    `/api/inventory/valuation`
+    ] as const;
+    }
+
+
+export const getGetInventoryValuationQueryOptions = <TData = Awaited<ReturnType<typeof getInventoryValuation>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getInventoryValuation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetInventoryValuationQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getInventoryValuation>>> = ({ signal }) => getInventoryValuation({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getInventoryValuation>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetInventoryValuationQueryResult = NonNullable<Awaited<ReturnType<typeof getInventoryValuation>>>
+export type GetInventoryValuationQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get inventory valuation
+ */
+
+export function useGetInventoryValuation<TData = Awaited<ReturnType<typeof getInventoryValuation>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getInventoryValuation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetInventoryValuationQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListInventoryAlertsUrl = () => {
+
+
+
+
+  return `/api/inventory/alerts`
+}
+
+/**
+ * @summary List stock alerts
+ */
+export const listInventoryAlerts = async ( options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getListInventoryAlertsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListInventoryAlertsQueryKey = () => {
+    return [
+    `/api/inventory/alerts`
+    ] as const;
+    }
+
+
+export const getListInventoryAlertsQueryOptions = <TData = Awaited<ReturnType<typeof listInventoryAlerts>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listInventoryAlerts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListInventoryAlertsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listInventoryAlerts>>> = ({ signal }) => listInventoryAlerts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listInventoryAlerts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListInventoryAlertsQueryResult = NonNullable<Awaited<ReturnType<typeof listInventoryAlerts>>>
+export type ListInventoryAlertsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List stock alerts
+ */
+
+export function useListInventoryAlerts<TData = Awaited<ReturnType<typeof listInventoryAlerts>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listInventoryAlerts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListInventoryAlertsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetInventoryAnalyticsUrl = () => {
+
+
+
+
+  return `/api/inventory/analytics`
+}
+
+/**
+ * @summary Get inventory analytics
+ */
+export const getInventoryAnalytics = async ( options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getGetInventoryAnalyticsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetInventoryAnalyticsQueryKey = () => {
+    return [
+    `/api/inventory/analytics`
+    ] as const;
+    }
+
+
+export const getGetInventoryAnalyticsQueryOptions = <TData = Awaited<ReturnType<typeof getInventoryAnalytics>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getInventoryAnalytics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetInventoryAnalyticsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getInventoryAnalytics>>> = ({ signal }) => getInventoryAnalytics({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getInventoryAnalytics>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetInventoryAnalyticsQueryResult = NonNullable<Awaited<ReturnType<typeof getInventoryAnalytics>>>
+export type GetInventoryAnalyticsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get inventory analytics
+ */
+
+export function useGetInventoryAnalytics<TData = Awaited<ReturnType<typeof getInventoryAnalytics>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getInventoryAnalytics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetInventoryAnalyticsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListProductBatchesUrl = (params?: ListProductBatchesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/inventory/batches?${stringifiedParams}` : `/api/inventory/batches`
+}
+
+/**
+ * @summary List product batches
+ */
+export const listProductBatches = async (params?: ListProductBatchesParams, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getListProductBatchesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListProductBatchesQueryKey = (params?: ListProductBatchesParams,) => {
+    return [
+    `/api/inventory/batches`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListProductBatchesQueryOptions = <TData = Awaited<ReturnType<typeof listProductBatches>>, TError = ErrorType<unknown>>(params?: ListProductBatchesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProductBatches>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListProductBatchesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProductBatches>>> = ({ signal }) => listProductBatches(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProductBatches>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListProductBatchesQueryResult = NonNullable<Awaited<ReturnType<typeof listProductBatches>>>
+export type ListProductBatchesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List product batches
+ */
+
+export function useListProductBatches<TData = Awaited<ReturnType<typeof listProductBatches>>, TError = ErrorType<unknown>>(
+ params?: ListProductBatchesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProductBatches>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListProductBatchesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateProductBatchUrl = () => {
+
+
+
+
+  return `/api/inventory/batches`
+}
+
+/**
+ * @summary Create product batch
+ */
+export const createProductBatch = async (productBatchInput: ProductBatchInput, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getCreateProductBatchUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      productBatchInput,)
+  }
+);}
+
+
+
+
+export const getCreateProductBatchMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProductBatch>>, TError,{data: BodyType<ProductBatchInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createProductBatch>>, TError,{data: BodyType<ProductBatchInput>}, TContext> => {
+
+const mutationKey = ['createProductBatch'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProductBatch>>, {data: BodyType<ProductBatchInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createProductBatch(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateProductBatchMutationResult = NonNullable<Awaited<ReturnType<typeof createProductBatch>>>
+    export type CreateProductBatchMutationBody = BodyType<ProductBatchInput>
+    export type CreateProductBatchMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create product batch
+ */
+export const useCreateProductBatch = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProductBatch>>, TError,{data: BodyType<ProductBatchInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createProductBatch>>,
+        TError,
+        {data: BodyType<ProductBatchInput>},
+        TContext
+      > => {
+      return useMutation(getCreateProductBatchMutationOptions(options));
+    }
+
+export const getListExpiringBatchesUrl = (params?: ListExpiringBatchesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/inventory/expiry?${stringifiedParams}` : `/api/inventory/expiry`
+}
+
+/**
+ * @summary List expiring batches
+ */
+export const listExpiringBatches = async (params?: ListExpiringBatchesParams, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getListExpiringBatchesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListExpiringBatchesQueryKey = (params?: ListExpiringBatchesParams,) => {
+    return [
+    `/api/inventory/expiry`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListExpiringBatchesQueryOptions = <TData = Awaited<ReturnType<typeof listExpiringBatches>>, TError = ErrorType<unknown>>(params?: ListExpiringBatchesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listExpiringBatches>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListExpiringBatchesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listExpiringBatches>>> = ({ signal }) => listExpiringBatches(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listExpiringBatches>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListExpiringBatchesQueryResult = NonNullable<Awaited<ReturnType<typeof listExpiringBatches>>>
+export type ListExpiringBatchesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List expiring batches
+ */
+
+export function useListExpiringBatches<TData = Awaited<ReturnType<typeof listExpiringBatches>>, TError = ErrorType<unknown>>(
+ params?: ListExpiringBatchesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listExpiringBatches>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListExpiringBatchesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getDisposeInventoryUrl = () => {
+
+
+
+
+  return `/api/inventory/disposals`
+}
+
+/**
+ * @summary Dispose damaged, expired, or wasted inventory
+ */
+export const disposeInventory = async (inventoryDisposalInput: InventoryDisposalInput, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDisposeInventoryUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      inventoryDisposalInput,)
+  }
+);}
+
+
+
+
+export const getDisposeInventoryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disposeInventory>>, TError,{data: BodyType<InventoryDisposalInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof disposeInventory>>, TError,{data: BodyType<InventoryDisposalInput>}, TContext> => {
+
+const mutationKey = ['disposeInventory'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof disposeInventory>>, {data: BodyType<InventoryDisposalInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  disposeInventory(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DisposeInventoryMutationResult = NonNullable<Awaited<ReturnType<typeof disposeInventory>>>
+    export type DisposeInventoryMutationBody = BodyType<InventoryDisposalInput>
+    export type DisposeInventoryMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Dispose damaged, expired, or wasted inventory
+ */
+export const useDisposeInventory = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disposeInventory>>, TError,{data: BodyType<InventoryDisposalInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof disposeInventory>>,
+        TError,
+        {data: BodyType<InventoryDisposalInput>},
+        TContext
+      > => {
+      return useMutation(getDisposeInventoryMutationOptions(options));
+    }
+
+export const getGetProfitReportUrl = (params?: GetProfitReportParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/reports/profit?${stringifiedParams}` : `/api/reports/profit`
+}
+
+/**
+ * @summary Get revenue, COGS, and profit report
+ */
+export const getProfitReport = async (params?: GetProfitReportParams, options?: RequestInit): Promise<ProfitReport> => {
+
+  return customFetch<ProfitReport>(getGetProfitReportUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProfitReportQueryKey = (params?: GetProfitReportParams,) => {
+    return [
+    `/api/reports/profit`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetProfitReportQueryOptions = <TData = Awaited<ReturnType<typeof getProfitReport>>, TError = ErrorType<unknown>>(params?: GetProfitReportParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProfitReport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProfitReportQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProfitReport>>> = ({ signal }) => getProfitReport(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProfitReport>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetProfitReportQueryResult = NonNullable<Awaited<ReturnType<typeof getProfitReport>>>
+export type GetProfitReportQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get revenue, COGS, and profit report
+ */
+
+export function useGetProfitReport<TData = Awaited<ReturnType<typeof getProfitReport>>, TError = ErrorType<unknown>>(
+ params?: GetProfitReportParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProfitReport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetProfitReportQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getListSuppliersUrl = (params?: ListSuppliersParams,) => {
   const normalizedParams = new URLSearchParams();

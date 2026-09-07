@@ -26,6 +26,7 @@ import AiInsights from "@/pages/ai-insights";
 import AiAssistant from "@/pages/ai-assistant";
 import POS from "@/pages/pos";
 import AuditLogs from "@/pages/audit-logs";
+import FinancialReports from "@/pages/financial-reports";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -190,6 +191,12 @@ function Router() {
         path="/ai-assistant"
         component={() => (
           <ProtectedRoute component={AiAssistant} permission="ai-assistant" />
+        )}
+      />
+      <Route
+        path="/financial-reports"
+        component={() => (
+          <ProtectedRoute component={FinancialReports} permission="expenses" />
         )}
       />
       <Route component={NotFound} />
