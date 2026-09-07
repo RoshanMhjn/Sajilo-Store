@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, type KeyboardEvent } from "react";
 import {
   useListProducts,
   useListCustomers,
@@ -33,6 +33,9 @@ import {
   X,
   Printer,
   Star,
+  Pause,
+  Play,
+  Wallet,
 } from "lucide-react";
 
 type CartItem = {
@@ -98,7 +101,39 @@ export default function POS() {
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [lastSale, setLastSale] = useState<any>(null);
+  const [session, setSession] = useState<any>(null);
+  const [openingCash, setOpeningCash] = useState("");
+  const [closingCash, setClosingCash] = useState("");
+  const [heldSales, setHeldSales] = useState<any[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  async function posRequest(path: string, options?: RequestInit) {
+    const response = await fetch(`/api${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("store_auth_token") ?? ""}`,
+        ...(options?.headers ?? {}),
+      },
+    });
+    if (!response.ok)
+      throw new Error(
+        (await response.json().catch(() => null))?.error ?? "Request failed",
+      );
+    return response.status === 204 ? null : response.json();
+  }
+
+  useEffect(() => {
+    void Promise.all([
+      posRequest("/pos/sessions/current"),
+      posRequest("/pos/suspended-sales"),
+    ])
+      .then(([current, held]) => {
+        setSession(current);
+        setHeldSales(held);
+      })
+      .catch(() => undefined);
+  }, []);
 
   const { data: productsData, isLoading: productsLoading } = useListProducts({
     search: search || undefined,
@@ -138,6 +173,87 @@ export default function POS() {
     });
     setSearch("");
     searchRef.current?.focus();
+  }
+
+  function handleBarcodeKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    const product = products[0];
+    if (product) addToCart(product);
+    else
+      toast({
+        variant: "destructive",
+        title: "Barcode not found",
+        description: `No product matches ${search}`,
+      });
+  }
+
+  async function holdSale() {
+    try {
+      const held = await posRequest("/pos/suspended-sales", {
+        method: "POST",
+        body: JSON.stringify({ items: cart, customerId, paymentMethod }),
+      });
+      setHeldSales((current) => [held, ...current]);
+      clearCart();
+      toast({ title: "Sale held" });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Could not hold sale",
+        description: (error as Error).message,
+      });
+    }
+  }
+
+  async function openSession() {
+    try {
+      const current = await posRequest("/pos/sessions", {
+        method: "POST",
+        body: JSON.stringify({ openingCash: Number(openingCash) }),
+      });
+      setSession(current);
+      setOpeningCash("");
+      toast({ title: "Cashier session opened" });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Could not open session",
+        description: (error as Error).message,
+      });
+    }
+  }
+
+  async function closeSession() {
+    if (!session) return;
+    try {
+      const closed = await posRequest(`/pos/sessions/${session.id}/close`, {
+        method: "POST",
+        body: JSON.stringify({ closingCash: Number(closingCash) }),
+      });
+      setSession(null);
+      setClosingCash("");
+      toast({
+        title: "Session closed",
+        description: `Difference: ${fmt(Number(closed.difference))}`,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Could not close session",
+        description: (error as Error).message,
+      });
+    }
+  }
+
+  async function resumeSale(held: any) {
+    setCart(held.items as CartItem[]);
+    setCustomerId(held.customerId);
+    setPaymentMethod(held.paymentMethod);
+    setHeldSales((current) => current.filter((item) => item.id !== held.id));
+    await posRequest(`/pos/suspended-sales/${held.id}`, {
+      method: "DELETE",
+    }).catch(() => undefined);
   }
 
   function updateQty(productId: number, delta: number) {
@@ -332,9 +448,76 @@ export default function POS() {
                 className="pl-9"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={handleBarcodeKeyDown}
                 autoFocus
                 data-testid="input-pos-search"
               />
+              <div className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                <span>Barcode mode: scan or type a code, then press Enter</span>
+                {session ? (
+                  <Badge variant="outline" className="gap-1">
+                    <Wallet className="h-3 w-3" />
+                    Session open
+                  </Badge>
+                ) : (
+                  <span>Session required for reconciliation</span>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 px-4 pt-3">
+              {!session ? (
+                <>
+                  <Input
+                    className="h-8 w-32 text-xs"
+                    value={openingCash}
+                    onChange={(e) => setOpeningCash(e.target.value)}
+                    placeholder="Opening cash"
+                    inputMode="decimal"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={openSession}
+                    disabled={!openingCash}
+                  >
+                    Start session
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Input
+                    className="h-8 w-32 text-xs"
+                    value={closingCash}
+                    onChange={(e) => setClosingCash(e.target.value)}
+                    placeholder="Closing cash"
+                    inputMode="decimal"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={closeSession}
+                    disabled={!closingCash}
+                  >
+                    Close session
+                  </Button>
+                </>
+              )}
+              {cart.length > 0 && (
+                <Button size="sm" variant="outline" onClick={holdSale}>
+                  <Pause className="mr-1 h-3.5 w-3.5" />
+                  Hold sale
+                </Button>
+              )}
+              {heldSales.map((held) => (
+                <Button
+                  key={held.id}
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => void resumeSale(held)}
+                >
+                  <Play className="mr-1 h-3.5 w-3.5" />
+                  Resume #{held.id}
+                </Button>
+              ))}
             </div>
           </div>
           <ScrollArea className="flex-1 p-4">

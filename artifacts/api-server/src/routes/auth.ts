@@ -43,6 +43,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     "notifications",
     "ai-insights",
     "ai-assistant",
+    "audit-logs",
   ],
   cashier: ["pos", "sales", "customers", "notifications"],
   billing: ["pos", "sales", "customers", "notifications"],

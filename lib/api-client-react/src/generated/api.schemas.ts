@@ -488,6 +488,51 @@ export interface SalesSummary {
   cardRevenue?: number;
 }
 
+/**
+ * @nullable
+ */
+export type AuditLogOldValue = { [key: string]: unknown } | null;
+
+/**
+ * @nullable
+ */
+export type AuditLogNewValue = { [key: string]: unknown } | null;
+
+/**
+ * @nullable
+ */
+export type AuditLogMetadata = { [key: string]: unknown } | null;
+
+export interface AuditLog {
+  id: number;
+  /** @nullable */
+  userId?: number | null;
+  /** @nullable */
+  userName?: string | null;
+  /** @nullable */
+  userEmail?: string | null;
+  action: string;
+  entityType: string;
+  /** @nullable */
+  entityId?: string | null;
+  /** @nullable */
+  oldValue?: AuditLogOldValue;
+  /** @nullable */
+  newValue?: AuditLogNewValue;
+  /** @nullable */
+  metadata?: AuditLogMetadata;
+  /** @nullable */
+  ipAddress?: string | null;
+  createdAt: string;
+}
+
+export interface AuditLogList {
+  items: AuditLog[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export type CustomerMembershipTier = typeof CustomerMembershipTier[keyof typeof CustomerMembershipTier];
 
 
@@ -1058,6 +1103,30 @@ dateTo?: string;
 customerId?: number;
 page?: number;
 limit?: number;
+};
+
+export type VoidSaleBody = {
+  reason?: string;
+};
+
+export type ListAuditLogsParams = {
+search?: string;
+action?: string;
+entityType?: string;
+userId?: number;
+dateFrom?: string;
+dateTo?: string;
+page?: number;
+limit?: number;
+};
+
+export type OpenPosSessionBody = {
+  openingCash: number;
+};
+
+export type ClosePosSessionBody = {
+  closingCash: number;
+  notes?: string;
 };
 
 export type ListCustomersParams = {

@@ -849,6 +849,138 @@ export const ReturnSaleResponse = zod.object({
 
 
 /**
+ * @summary Void a completed sale
+ */
+export const VoidSaleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const VoidSaleBody = zod.object({
+  "reason": zod.string().optional()
+})
+
+
+/**
+ * @summary List audit events
+ */
+export const ListAuditLogsQueryParams = zod.object({
+  "search": zod.coerce.string().optional(),
+  "action": zod.coerce.string().optional(),
+  "entityType": zod.coerce.string().optional(),
+  "userId": zod.coerce.number().optional(),
+  "dateFrom": zod.date().optional(),
+  "dateTo": zod.date().optional(),
+  "page": zod.coerce.number().optional(),
+  "limit": zod.coerce.number().optional()
+})
+
+export const ListAuditLogsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "userId": zod.number().nullish(),
+  "userName": zod.string().nullish(),
+  "userEmail": zod.string().nullish(),
+  "action": zod.string(),
+  "entityType": zod.string(),
+  "entityId": zod.string().nullish(),
+  "oldValue": zod.object({
+
+}).passthrough().nullish(),
+  "newValue": zod.object({
+
+}).passthrough().nullish(),
+  "metadata": zod.object({
+
+}).passthrough().nullish(),
+  "ipAddress": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})),
+  "total": zod.number(),
+  "page": zod.number(),
+  "limit": zod.number()
+})
+
+
+/**
+ * @summary Get audit event details
+ */
+export const GetAuditLogParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetAuditLogResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number().nullish(),
+  "userName": zod.string().nullish(),
+  "userEmail": zod.string().nullish(),
+  "action": zod.string(),
+  "entityType": zod.string(),
+  "entityId": zod.string().nullish(),
+  "oldValue": zod.object({
+
+}).passthrough().nullish(),
+  "newValue": zod.object({
+
+}).passthrough().nullish(),
+  "metadata": zod.object({
+
+}).passthrough().nullish(),
+  "ipAddress": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Open cashier session
+ */
+export const OpenPosSessionBody = zod.object({
+  "openingCash": zod.number()
+})
+
+
+/**
+ * @summary Close cashier session and reconcile cash
+ */
+export const ClosePosSessionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ClosePosSessionBody = zod.object({
+  "closingCash": zod.number(),
+  "notes": zod.string().optional()
+})
+
+
+/**
+ * @summary Suspend a sale
+ */
+export const SuspendSaleBody = zod.object({
+  "customerId": zod.number().nullish(),
+  "items": zod.array(zod.object({
+  "productId": zod.number(),
+  "productName": zod.string().optional(),
+  "quantity": zod.number(),
+  "unitPrice": zod.number(),
+  "discount": zod.number().optional(),
+  "tax": zod.number().optional(),
+  "total": zod.number().optional()
+})),
+  "discount": zod.number().optional(),
+  "paymentMethod": zod.enum(['cash', 'card', 'digital_wallet', 'split']),
+  "amountPaid": zod.number(),
+  "notes": zod.string().optional()
+})
+
+
+/**
+ * @summary Delete a suspended sale
+ */
+export const DeleteSuspendedSaleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
  * @summary Today's sales summary
  */
 export const GetTodaySalesSummaryResponse = zod.object({

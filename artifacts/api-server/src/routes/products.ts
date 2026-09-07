@@ -8,6 +8,7 @@ import {
 } from "@workspace/db";
 import { eq, ilike, and, lte, sql } from "drizzle-orm";
 import { requirePermission } from "../middlewares/permissions";
+import { auditLog } from "../lib/audit";
 
 const router = Router();
 
@@ -18,7 +19,10 @@ router.get("/products", async (req, res) => {
   const offset = (pageNum - 1) * limitNum;
 
   let conditions: ReturnType<typeof eq>[] = [];
-  if (search) conditions.push(ilike(productsTable.name, `%${search}%`) as any);
+  if (search)
+    conditions.push(
+      sql`(${ilike(productsTable.name, `%${search}%`)} OR ${ilike(productsTable.barcode, `%${search}%`)} OR ${ilike(productsTable.sku, `%${search}%`)})` as any,
+    );
   if (categoryId)
     conditions.push(
       eq(productsTable.categoryId, parseInt(String(categoryId))) as any,
@@ -69,12 +73,29 @@ router.get("/products", async (req, res) => {
 
 router.post("/products", async (req, res) => {
   const { initialStock, ...data } = req.body;
+  if (data.barcode) {
+    const [duplicate] = await db
+      .select({ id: productsTable.id })
+      .from(productsTable)
+      .where(eq(productsTable.barcode, String(data.barcode)));
+    if (duplicate) {
+      res.status(409).json({ error: "Barcode already exists" });
+      return;
+    }
+  }
   const [product] = await db.insert(productsTable).values(data).returning();
   const stockQty = initialStock ?? 0;
   const [inv] = await db
     .insert(inventoryTable)
     .values({ productId: product.id, quantity: String(stockQty) })
     .returning();
+  await auditLog({
+    req,
+    action: "created",
+    entityType: "product",
+    entityId: product.id,
+    newValue: product,
+  });
   res.status(201).json({
     ...product,
     costPrice: Number(product.costPrice),
@@ -150,6 +171,14 @@ router.get("/products/:id", async (req, res) => {
 
 router.patch("/products/:id", async (req, res) => {
   const id = parseInt(req.params.id);
+  const [before] = await db
+    .select()
+    .from(productsTable)
+    .where(eq(productsTable.id, id));
+  if (!before) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
   const updates: Record<string, unknown> = {};
   const fields = [
     "name",
@@ -173,15 +202,33 @@ router.patch("/products/:id", async (req, res) => {
   ];
   for (const f of fields)
     if (req.body[f] !== undefined) updates[f] = req.body[f];
+  if (updates.barcode && updates.barcode !== before.barcode) {
+    const [duplicate] = await db
+      .select({ id: productsTable.id })
+      .from(productsTable)
+      .where(eq(productsTable.barcode, String(updates.barcode)));
+    if (duplicate && duplicate.id !== id) {
+      res.status(409).json({ error: "Barcode already exists" });
+      return;
+    }
+  }
   const [product] = await db
     .update(productsTable)
     .set(updates)
     .where(eq(productsTable.id, id))
     .returning();
-  if (!product) {
-    res.status(404).json({ error: "Not found" });
-    return;
-  }
+  await auditLog({
+    req,
+    action:
+      updates.sellingPrice !== undefined &&
+      updates.sellingPrice !== before.sellingPrice
+        ? "price_changed"
+        : "updated",
+    entityType: "product",
+    entityId: id,
+    oldValue: before,
+    newValue: product,
+  });
   const [inv] = await db
     .select()
     .from(inventoryTable)
@@ -205,6 +252,10 @@ router.delete(
   requirePermission("inventory"),
   async (req, res) => {
     const id = parseInt(String(req.params.id));
+    const [before] = await db
+      .select()
+      .from(productsTable)
+      .where(eq(productsTable.id, id));
     await db.transaction(async (tx) => {
       await tx
         .delete(inventoryMovementsTable)
@@ -212,6 +263,14 @@ router.delete(
       await tx.delete(inventoryTable).where(eq(inventoryTable.productId, id));
       await tx.delete(productsTable).where(eq(productsTable.id, id));
     });
+    if (before)
+      await auditLog({
+        req,
+        action: "deleted",
+        entityType: "product",
+        entityId: id,
+        oldValue: before,
+      });
     res.status(204).send();
   },
 );

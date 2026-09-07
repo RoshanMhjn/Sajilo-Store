@@ -42,6 +42,8 @@ tags:
     description: AI features
   - name: notifications
     description: Notifications
+  - name: audit
+    description: Administrative audit history
 
 paths:
   /healthz:
@@ -745,6 +747,149 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Sale"
+
+  /sales/{id}/void:
+    post:
+      operationId: voidSale
+      tags: [sales]
+      summary: Void a completed sale
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Sale voided
+
+  /audit-logs:
+    get:
+      operationId: listAuditLogs
+      tags: [audit]
+      summary: List audit events
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: action, in: query, schema: { type: string } }
+        - { name: entityType, in: query, schema: { type: string } }
+        - { name: userId, in: query, schema: { type: integer } }
+        - {
+            name: dateFrom,
+            in: query,
+            schema: { type: string, format: date-time },
+          }
+        - {
+            name: dateTo,
+            in: query,
+            schema: { type: string, format: date-time },
+          }
+        - { name: page, in: query, schema: { type: integer } }
+        - { name: limit, in: query, schema: { type: integer } }
+      responses:
+        "200":
+          description: Audit log page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditLogList"
+
+  /audit-logs/{id}:
+    get:
+      operationId: getAuditLog
+      tags: [audit]
+      summary: Get audit event details
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Audit event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditLog"
+
+  /pos/sessions:
+    post:
+      operationId: openPosSession
+      tags: [sales]
+      summary: Open cashier session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [openingCash]
+              properties:
+                openingCash: { type: number }
+      responses:
+        "201": { description: Session opened }
+
+  /pos/sessions/current:
+    get:
+      operationId: getCurrentPosSession
+      tags: [sales]
+      summary: Get current cashier session
+      responses:
+        "200": { description: Current session or null }
+
+  /pos/sessions/{id}/close:
+    post:
+      operationId: closePosSession
+      tags: [sales]
+      summary: Close cashier session and reconcile cash
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [closingCash]
+              properties:
+                closingCash: { type: number }
+                notes: { type: string }
+      responses:
+        "200": { description: Session closed }
+
+  /pos/suspended-sales:
+    get:
+      operationId: listSuspendedSales
+      tags: [sales]
+      summary: List suspended sales
+      responses:
+        "200": { description: Suspended sales }
+    post:
+      operationId: suspendSale
+      tags: [sales]
+      summary: Suspend a sale
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaleInput"
+      responses:
+        "201": { description: Sale suspended }
+
+  /pos/suspended-sales/{id}:
+    delete:
+      operationId: deleteSuspendedSale
+      tags: [sales]
+      summary: Delete a suspended sale
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204": { description: Suspended sale deleted }
 
   /sales/summary/today:
     get:
@@ -2101,6 +2246,32 @@ components:
           type: number
         cardRevenue:
           type: number
+
+    AuditLog:
+      type: object
+      required: [id, action, entityType, createdAt]
+      properties:
+        id: { type: integer }
+        userId: { type: [integer, "null"] }
+        userName: { type: [string, "null"] }
+        userEmail: { type: [string, "null"] }
+        action: { type: string }
+        entityType: { type: string }
+        entityId: { type: [string, "null"] }
+        oldValue: { type: [object, "null"] }
+        newValue: { type: [object, "null"] }
+        metadata: { type: [object, "null"] }
+        ipAddress: { type: [string, "null"] }
+        createdAt: { type: string, format: date-time }
+
+    AuditLogList:
+      type: object
+      required: [items, total, page, limit]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/AuditLog" } }
+        total: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
 
     Customer:
       type: object

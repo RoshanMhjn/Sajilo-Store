@@ -23,6 +23,7 @@ import {
   X,
   Moon,
   Sun,
+  ShieldCheck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
@@ -94,6 +95,12 @@ const navItems = [
         label: "Sales History",
         icon: Receipt,
         permission: "sales",
+      },
+      {
+        href: "/audit-logs",
+        label: "Audit Logs",
+        icon: ShieldCheck,
+        permission: "audit-logs",
       },
       {
         href: "/customers",

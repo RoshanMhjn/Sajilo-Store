@@ -12,3 +12,5 @@ export * from "./leaves";
 export * from "./payroll";
 export * from "./expenses";
 export * from "./notifications";
+export * from "./audit-logs";
+export * from "./pos";

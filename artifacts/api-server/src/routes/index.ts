@@ -16,6 +16,8 @@ import payrollRouter from "./payroll";
 import expensesRouter from "./expenses";
 import notificationsRouter from "./notifications";
 import aiRouter from "./ai";
+import auditRouter from "./audit";
+import posRouter from "./pos";
 
 const router: IRouter = Router();
 
@@ -36,5 +38,7 @@ router.use(payrollRouter);
 router.use(expensesRouter);
 router.use(notificationsRouter);
 router.use(aiRouter);
+router.use(auditRouter);
+router.use(posRouter);
 
 export default router;

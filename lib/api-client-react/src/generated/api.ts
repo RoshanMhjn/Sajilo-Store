@@ -27,10 +27,13 @@ import type {
   AiInsight,
   AttendanceInput,
   AttendanceRecord,
+  AuditLog,
+  AuditLogList,
   AuthResponse,
   Category,
   CategoryInput,
   CategoryUpdate,
+  ClosePosSessionBody,
   Customer,
   CustomerInput,
   CustomerList,
@@ -50,6 +53,7 @@ import type {
   LeaveInput,
   LeaveRequest,
   ListAttendanceParams,
+  ListAuditLogsParams,
   ListCustomersParams,
   ListEmployeesParams,
   ListExpensesParams,
@@ -64,6 +68,7 @@ import type {
   LoginInput,
   LowStockItem,
   Notification,
+  OpenPosSessionBody,
   PayrollInput,
   PayrollProcessInput,
   PayrollRecord,
@@ -87,7 +92,8 @@ import type {
   SupplierInput,
   SupplierUpdate,
   TopProduct,
-  User
+  User,
+  VoidSaleBody
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -2821,6 +2827,677 @@ export const useReturnSale = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getReturnSaleMutationOptions(options));
+    }
+
+export const getVoidSaleUrl = (id: number,) => {
+
+
+
+
+  return `/api/sales/${id}/void`
+}
+
+/**
+ * @summary Void a completed sale
+ */
+export const voidSale = async (id: number,
+    voidSaleBody?: VoidSaleBody, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getVoidSaleUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      voidSaleBody,)
+  }
+);}
+
+
+
+
+export const getVoidSaleMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof voidSale>>, TError,{id: number;data?: BodyType<VoidSaleBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof voidSale>>, TError,{id: number;data?: BodyType<VoidSaleBody>}, TContext> => {
+
+const mutationKey = ['voidSale'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof voidSale>>, {id: number;data?: BodyType<VoidSaleBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  voidSale(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type VoidSaleMutationResult = NonNullable<Awaited<ReturnType<typeof voidSale>>>
+    export type VoidSaleMutationBody = BodyType<VoidSaleBody> | undefined
+    export type VoidSaleMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Void a completed sale
+ */
+export const useVoidSale = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof voidSale>>, TError,{id: number;data?: BodyType<VoidSaleBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof voidSale>>,
+        TError,
+        {id: number;data?: BodyType<VoidSaleBody>},
+        TContext
+      > => {
+      return useMutation(getVoidSaleMutationOptions(options));
+    }
+
+export const getListAuditLogsUrl = (params?: ListAuditLogsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/audit-logs?${stringifiedParams}` : `/api/audit-logs`
+}
+
+/**
+ * @summary List audit events
+ */
+export const listAuditLogs = async (params?: ListAuditLogsParams, options?: RequestInit): Promise<AuditLogList> => {
+
+  return customFetch<AuditLogList>(getListAuditLogsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAuditLogsQueryKey = (params?: ListAuditLogsParams,) => {
+    return [
+    `/api/audit-logs`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAuditLogsQueryOptions = <TData = Awaited<ReturnType<typeof listAuditLogs>>, TError = ErrorType<unknown>>(params?: ListAuditLogsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAuditLogs>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAuditLogsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAuditLogs>>> = ({ signal }) => listAuditLogs(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAuditLogs>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAuditLogsQueryResult = NonNullable<Awaited<ReturnType<typeof listAuditLogs>>>
+export type ListAuditLogsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List audit events
+ */
+
+export function useListAuditLogs<TData = Awaited<ReturnType<typeof listAuditLogs>>, TError = ErrorType<unknown>>(
+ params?: ListAuditLogsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAuditLogs>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAuditLogsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetAuditLogUrl = (id: number,) => {
+
+
+
+
+  return `/api/audit-logs/${id}`
+}
+
+/**
+ * @summary Get audit event details
+ */
+export const getAuditLog = async (id: number, options?: RequestInit): Promise<AuditLog> => {
+
+  return customFetch<AuditLog>(getGetAuditLogUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAuditLogQueryKey = (id: number,) => {
+    return [
+    `/api/audit-logs/${id}`
+    ] as const;
+    }
+
+
+export const getGetAuditLogQueryOptions = <TData = Awaited<ReturnType<typeof getAuditLog>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuditLog>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAuditLogQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuditLog>>> = ({ signal }) => getAuditLog(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAuditLog>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAuditLogQueryResult = NonNullable<Awaited<ReturnType<typeof getAuditLog>>>
+export type GetAuditLogQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get audit event details
+ */
+
+export function useGetAuditLog<TData = Awaited<ReturnType<typeof getAuditLog>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuditLog>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAuditLogQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getOpenPosSessionUrl = () => {
+
+
+
+
+  return `/api/pos/sessions`
+}
+
+/**
+ * @summary Open cashier session
+ */
+export const openPosSession = async (openPosSessionBody: OpenPosSessionBody, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getOpenPosSessionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      openPosSessionBody,)
+  }
+);}
+
+
+
+
+export const getOpenPosSessionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof openPosSession>>, TError,{data: BodyType<OpenPosSessionBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof openPosSession>>, TError,{data: BodyType<OpenPosSessionBody>}, TContext> => {
+
+const mutationKey = ['openPosSession'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof openPosSession>>, {data: BodyType<OpenPosSessionBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  openPosSession(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type OpenPosSessionMutationResult = NonNullable<Awaited<ReturnType<typeof openPosSession>>>
+    export type OpenPosSessionMutationBody = BodyType<OpenPosSessionBody>
+    export type OpenPosSessionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Open cashier session
+ */
+export const useOpenPosSession = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof openPosSession>>, TError,{data: BodyType<OpenPosSessionBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof openPosSession>>,
+        TError,
+        {data: BodyType<OpenPosSessionBody>},
+        TContext
+      > => {
+      return useMutation(getOpenPosSessionMutationOptions(options));
+    }
+
+export const getGetCurrentPosSessionUrl = () => {
+
+
+
+
+  return `/api/pos/sessions/current`
+}
+
+/**
+ * @summary Get current cashier session
+ */
+export const getCurrentPosSession = async ( options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getGetCurrentPosSessionUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCurrentPosSessionQueryKey = () => {
+    return [
+    `/api/pos/sessions/current`
+    ] as const;
+    }
+
+
+export const getGetCurrentPosSessionQueryOptions = <TData = Awaited<ReturnType<typeof getCurrentPosSession>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCurrentPosSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCurrentPosSessionQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCurrentPosSession>>> = ({ signal }) => getCurrentPosSession({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCurrentPosSession>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCurrentPosSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getCurrentPosSession>>>
+export type GetCurrentPosSessionQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get current cashier session
+ */
+
+export function useGetCurrentPosSession<TData = Awaited<ReturnType<typeof getCurrentPosSession>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCurrentPosSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCurrentPosSessionQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getClosePosSessionUrl = (id: number,) => {
+
+
+
+
+  return `/api/pos/sessions/${id}/close`
+}
+
+/**
+ * @summary Close cashier session and reconcile cash
+ */
+export const closePosSession = async (id: number,
+    closePosSessionBody: ClosePosSessionBody, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getClosePosSessionUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      closePosSessionBody,)
+  }
+);}
+
+
+
+
+export const getClosePosSessionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closePosSession>>, TError,{id: number;data: BodyType<ClosePosSessionBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof closePosSession>>, TError,{id: number;data: BodyType<ClosePosSessionBody>}, TContext> => {
+
+const mutationKey = ['closePosSession'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof closePosSession>>, {id: number;data: BodyType<ClosePosSessionBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  closePosSession(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClosePosSessionMutationResult = NonNullable<Awaited<ReturnType<typeof closePosSession>>>
+    export type ClosePosSessionMutationBody = BodyType<ClosePosSessionBody>
+    export type ClosePosSessionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Close cashier session and reconcile cash
+ */
+export const useClosePosSession = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closePosSession>>, TError,{id: number;data: BodyType<ClosePosSessionBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof closePosSession>>,
+        TError,
+        {id: number;data: BodyType<ClosePosSessionBody>},
+        TContext
+      > => {
+      return useMutation(getClosePosSessionMutationOptions(options));
+    }
+
+export const getListSuspendedSalesUrl = () => {
+
+
+
+
+  return `/api/pos/suspended-sales`
+}
+
+/**
+ * @summary List suspended sales
+ */
+export const listSuspendedSales = async ( options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getListSuspendedSalesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSuspendedSalesQueryKey = () => {
+    return [
+    `/api/pos/suspended-sales`
+    ] as const;
+    }
+
+
+export const getListSuspendedSalesQueryOptions = <TData = Awaited<ReturnType<typeof listSuspendedSales>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSuspendedSales>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSuspendedSalesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSuspendedSales>>> = ({ signal }) => listSuspendedSales({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSuspendedSales>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSuspendedSalesQueryResult = NonNullable<Awaited<ReturnType<typeof listSuspendedSales>>>
+export type ListSuspendedSalesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List suspended sales
+ */
+
+export function useListSuspendedSales<TData = Awaited<ReturnType<typeof listSuspendedSales>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSuspendedSales>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSuspendedSalesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSuspendSaleUrl = () => {
+
+
+
+
+  return `/api/pos/suspended-sales`
+}
+
+/**
+ * @summary Suspend a sale
+ */
+export const suspendSale = async (saleInput: SaleInput, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getSuspendSaleUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      saleInput,)
+  }
+);}
+
+
+
+
+export const getSuspendSaleMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suspendSale>>, TError,{data: BodyType<SaleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof suspendSale>>, TError,{data: BodyType<SaleInput>}, TContext> => {
+
+const mutationKey = ['suspendSale'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof suspendSale>>, {data: BodyType<SaleInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  suspendSale(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuspendSaleMutationResult = NonNullable<Awaited<ReturnType<typeof suspendSale>>>
+    export type SuspendSaleMutationBody = BodyType<SaleInput>
+    export type SuspendSaleMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Suspend a sale
+ */
+export const useSuspendSale = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suspendSale>>, TError,{data: BodyType<SaleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof suspendSale>>,
+        TError,
+        {data: BodyType<SaleInput>},
+        TContext
+      > => {
+      return useMutation(getSuspendSaleMutationOptions(options));
+    }
+
+export const getDeleteSuspendedSaleUrl = (id: number,) => {
+
+
+
+
+  return `/api/pos/suspended-sales/${id}`
+}
+
+/**
+ * @summary Delete a suspended sale
+ */
+export const deleteSuspendedSale = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteSuspendedSaleUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteSuspendedSaleMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSuspendedSale>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteSuspendedSale>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteSuspendedSale'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteSuspendedSale>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteSuspendedSale(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteSuspendedSaleMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSuspendedSale>>>
+
+    export type DeleteSuspendedSaleMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a suspended sale
+ */
+export const useDeleteSuspendedSale = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSuspendedSale>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteSuspendedSale>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteSuspendedSaleMutationOptions(options));
     }
 
 export const getGetTodaySalesSummaryUrl = () => {
